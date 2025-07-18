@@ -28,19 +28,19 @@ defineProps<{ msg: string }>()
       <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">核心特性</h2>
       <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
         <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;">
-          <NCard title="可配置原版特性" bordered style="flex: 1 1 280px; max-width: 350px; transition: transform 0.3s;" hover>
+          <NCard title="可配置原版特性" bordered class="feature-card" hover>
             <p>灵活调整游戏机制，满足服务器独特需求</p>
           </NCard>
-          <NCard title="TPS监控支持" bordered style="flex: 1 1 280px; max-width: 350px; transition: transform 0.3s;" hover>
+          <NCard title="TPS监控支持" bordered class="feature-card" hover>
             <p>实时显示服务器性能，优化运营体验</p>
           </NCard>
-          <NCard title="Folia Bug修复" bordered style="flex: 1 1 280px; max-width: 350px; transition: transform 0.3s;" hover>
+          <NCard title="Folia Bug修复" bordered class="feature-card" hover>
             <p>解决核心问题，提升服务器稳定性</p>
           </NCard>
-          <NCard title="多种存档格式" bordered style="flex: 1 1 280px; max-width: 350px; transition: transform 0.3s;" hover>
+          <NCard title="多种存档格式" bordered class="feature-card" hover>
             <p>支持linear和b_linear格式，兼容更多场景</p>
           </NCard>
-          <NCard title="扩展API支持" bordered style="flex: 1 1 280px; max-width: 350px; transition: transform 0.3s;" hover>
+          <NCard title="扩展API支持" bordered class="feature-card" hover>
             <p>丰富插件开发能力，持续更新中</p>
           </NCard>
         </div>
