@@ -1,0 +1,6 @@
+# Top-level configuration
+name = "my-worker"
+main = "src/index.js"
+compatibility_date = "2022-07-12"
+
+workers_dev = false
