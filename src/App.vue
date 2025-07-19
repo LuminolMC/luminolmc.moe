@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 import { RouterLink, useRoute } from 'vue-router'
 import { h, computed } from 'vue'
 import {
@@ -19,7 +22,7 @@ const menuOptions: MenuOption[] = [
             name: 'home',
           }
         },
-        { default: () => '主页' }
+        { default: () => t('message.home') }
       ),
   },
   {
@@ -32,7 +35,7 @@ const menuOptions: MenuOption[] = [
             name: 'download',
           }
         },
-        { default: () => '下载' }
+        { default: () => t('message.download') }
       ),
   }  
 ]
@@ -52,8 +55,52 @@ const currentRouteName = computed(() => route.name as string)
     </NAffix>
     <router-view />
     <div style="padding-top: 20px;">
-      <NLayoutFooter style="text-align: center; padding: 24px; background: #f5f5f5; padding: 20px 24px; text-align: center;">
-        <p>© 2025 Luminol Team. 保留所有权利。</p>
+      <NLayoutFooter style="background: #f5f5f5; padding: 40px 24px;">
+        <div class="footer-container">
+          <!-- <div class="footer-column">
+            <h3>{{ t('message.gettingStarted') }}</h3>
+            <ul>
+              <li><a href="#">{{ t('message.downloads') }}</a></li>
+              <li><a href="#">{{ t('message.documentation') }}</a></li>
+              <li><a href="#">{{ t('message.javadocs') }}</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>{{ t('message.community') }}</h3>
+            <ul>
+              <li><a href="#">{{ t('message.ourCommunity') }}</a></li>
+              <li><a href="#">{{ t('message.github') }}</a></li>
+              <li><a href="#">{{ t('message.discord') }}</a></li>
+              <li><a href="#">{{ t('message.forums') }}</a></li>
+              <li><a href="#">{{ t('message.twitter') }}</a></li>
+              <li><a href="#">{{ t('message.paperMC') }}</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>{{ t('message.ourTeam') }}</h3>
+            <ul>
+              <li><a href="#">{{ t('message.contribute') }}</a></li>
+              <li><a href="#">{{ t('message.sponsors') }}</a></li>
+              <li><a href="#">{{ t('message.hangar') }}</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>{{ t('message.terms') }}</h3>
+            <ul>
+              <li><a href="#">{{ t('message.terms') }}</a></li>
+              <li><a href="#">{{ t('message.privacyPolicy') }}</a></li>
+              <li><a href="#">{{ t('message.legalNotice') }}</a></li>
+              <li><a href="#">{{ t('message.hangarTerms') }}</a></li>
+              <li><a href="#">{{ t('message.hangarPrivacyPolicy') }}</a></li>
+              <li><a href="#">{{ t('message.communityGuidelines') }}</a></li>
+            </ul>
+          </div> -->
+        </div>
+        <div class="footer-bottom" style="margin-top: 30px; text-align: center;">
+          <p>{{ t('message.copyright') }}</p>
+          <!-- <p style="margin-top: 10px; font-size: 12px;">{{ t('message.websiteVersion') }} 02ef2e7</p> -->
+          <p style="margin-top: 10px; font-size: 12px;">{{ t('message.disclaimer') }}</p>
+        </div>
       </NLayoutFooter>
     </div>
   </div>
@@ -89,5 +136,64 @@ const currentRouteName = computed(() => route.name as string)
   .logo {
     font-size: 20px;
   }
+}
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.footer-column {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 20px;
+  padding: 0 15px;
+}
+
+.footer-column h3 {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-column li {
+  margin-bottom: 10px;
+}
+
+.footer-column a {
+  color: #646cff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-column a:hover {
+  color: #535bf2;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .footer-column {
+    text-align: center;
+  }
+}
+
+.footer-bottom {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.footer-bottom p {
+  margin: 5px 0;
 }
 </style>
