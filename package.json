@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zayne-labs/callapi": "^1.8.17",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1"
   },

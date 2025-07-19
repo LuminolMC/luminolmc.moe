@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { h } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { h, computed } from 'vue'
 import {
   type MenuOption,
   NMenu,
-  NAffix
+  NAffix,
+  NLayoutFooter
 } from 'naive-ui'
 
 const menuOptions: MenuOption[] = [
   {
+    key: 'home',
     label: () =>
       h(
         RouterLink,
@@ -21,6 +23,7 @@ const menuOptions: MenuOption[] = [
       ),
   },
   {
+    key: 'download',
     label: () =>
       h(
         RouterLink,
@@ -33,6 +36,8 @@ const menuOptions: MenuOption[] = [
       ),
   }  
 ]
+const route = useRoute()
+const currentRouteName = computed(() => route.name as string)
 </script>
 
 <template>
@@ -41,11 +46,16 @@ const menuOptions: MenuOption[] = [
       <NLayoutHeader>
         <div class="header-container">
           <div class="logo">Luminol</div>
-          <NMenu :options="menuOptions" mode="horizontal" class="menu"/>
+          <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
         </div>
       </NLayoutHeader>
     </NAffix>
     <router-view />
+    <div style="padding-top: 20px;">
+      <NLayoutFooter style="text-align: center; padding: 24px; background: #f5f5f5; padding: 20px 24px; text-align: center;">
+        <p>© 2025 Luminol Team. 保留所有权利。</p>
+      </NLayoutFooter>
+    </div>
   </div>
 
 </template>
@@ -69,6 +79,7 @@ const menuOptions: MenuOption[] = [
 .menu {
   padding-left: 20px;
   font-weight: 500;
+  color: #000;
 }
 
 @media (max-width: 768px) {

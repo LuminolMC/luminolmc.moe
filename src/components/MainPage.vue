@@ -1,13 +1,46 @@
 <script setup lang="ts">
+import { callApi } from "@zayne-labs/callapi";
+import { computed, ref, onMounted } from "vue"
 import {
   NLayout,
   NLayoutContent,
-  NLayoutFooter,
   NButton,
   NCard,
 } from 'naive-ui'
 
 defineProps<{ msg: string }>()
+
+type TimeValuePair = [number, number]
+type TimeSeriesData = TimeValuePair[];
+const data = ref<TimeSeriesData | null>(null);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
+
+onMounted(async () => {
+  try {
+    // 设置5秒超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await callApi<TimeSeriesData>(
+      "https://bstats.org/api/v1/plugins/20909/charts/players/data",
+      { signal: controller.signal }
+    );
+    
+    clearTimeout(timeoutId);
+    data.value = response.data;
+  } catch (err) {
+    error.value = "无法加载玩家数据: " + (err instanceof Error ? err.message : String(err));
+    console.error("API调用错误:", err);
+  } finally {
+    isLoading.value = false;
+  }
+});
+const playerCount = computed(() => {
+  if (!data.value || data.value.length === 0) return -1;
+  return data.value[data.value.length - 1][1] || -1;
+});
+
 </script>
 
 <template>
@@ -21,7 +54,12 @@ defineProps<{ msg: string }>()
           <a href="#" style="color: white; margin: 0 10px;">English</a> | <a href="#" style="color: white; margin: 0 10px;">中文</a>
         </div> -->
         <NButton type="primary" size="large" style="margin-right: 12px;">开始使用</NButton>
-        <NButton size="large">了解更多</NButton>
+        <NButton strong secondary size="large">了解更多</NButton>
+        <div style="font-size: 1.1rem">
+          <p v-if="!isLoading && !error">Luminol 现在正在服务 {{ playerCount }} 个玩家</p>
+          <p v-else-if="isLoading">加载玩家数据中...</p>
+          <p v-else class="error">{{ error }}</p>
+        </div>
       </div>
 
       <!-- 特性区域 -->
@@ -46,13 +84,6 @@ defineProps<{ msg: string }>()
         </div>
       </div>
     </NLayoutContent>
-
-    <div style="padding-top: 20px;">
-      <NLayoutFooter style="text-align: center; padding: 24px; background: #f5f5f5; padding: 20px 24px; text-align: center;">
-        <p>© 2025 Luminol Team. 保留所有权利。</p>
-      </NLayoutFooter>
-    </div>
-
   </NLayout>
 </template>
 

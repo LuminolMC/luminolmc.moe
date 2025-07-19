@@ -2,13 +2,15 @@
 import {
   NLayout,
   NLayoutContent,
-  NLayoutFooter,
   NButton,
   NCard,
 } from 'naive-ui'
 
-defineProps<{ msg: string }>()
+const openGithub = () => {
+  window.open("https://github.com/LuminolMC/Luminol")
+}
 
+defineProps<{ msg: string }>()
 </script>
 
 <template>
@@ -18,6 +20,8 @@ defineProps<{ msg: string }>()
       <div style="text-align: center; padding: 150px 24px; background: linear-gradient(135deg, #646cff 0%, #535bf2 100%); color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box;">
         <h1 style="font-size: 3rem; margin-bottom: 20px;">下载 Luminol</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">选择适合您服务器的版本进行下载，开始使用 Luminol 的强大功能</p>
+        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openGithub">GITHUB</NButton>
+        <p style="font-size: 1rem;">下载页面正在完善，请先前往github release下载最新版本</p>
       </div>
 
       <!-- 下载选项 -->
@@ -52,11 +56,7 @@ defineProps<{ msg: string }>()
       </div>
     </NLayoutContent>
 
-    <div style="padding-top: 20px;">
-      <NLayoutFooter style="text-align: center; padding: 24px; background: #f5f5f5; padding: 20px 24px; text-align: center;">
-        <p>© 2025 Luminol Team. 保留所有权利。</p>
-      </NLayoutFooter>
-    </div>
+
   </NLayout>
 </template>
 
