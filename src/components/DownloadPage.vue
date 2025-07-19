@@ -9,8 +9,6 @@ import {
 const openGithub = () => {
   window.open("https://github.com/LuminolMC/Luminol")
 }
-
-defineProps<{ msg: string }>()
 </script>
 
 <template>

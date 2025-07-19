@@ -8,8 +8,6 @@ import {
   NCard,
 } from 'naive-ui'
 
-defineProps<{ msg: string }>()
-
 type TimeValuePair = [number, number]
 type TimeSeriesData = TimeValuePair[];
 const data = ref<TimeSeriesData | null>(null);
