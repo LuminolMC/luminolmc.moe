@@ -40,7 +40,6 @@ export default {
     javadocs: 'Java文档',
     community: '社区',
     ourCommunity: '我们的社区',
-    github: 'GitHub',
     discord: 'Discord',
     forums: '论坛',
     twitter: 'Twitter',

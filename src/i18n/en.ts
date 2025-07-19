@@ -40,7 +40,6 @@ export default {
     javadocs: 'Javadocs',
     community: 'Community',
     ourCommunity: 'Our Community',
-    github: 'GitHub',
     discord: 'Discord',
     forums: 'Forums',
     twitter: 'Twitter',
