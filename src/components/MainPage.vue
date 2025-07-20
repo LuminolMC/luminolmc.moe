@@ -2,16 +2,12 @@
 import { callApi } from "@zayne-labs/callapi";
 import { computed, ref, onMounted } from "vue"
 import { useI18n } from 'vue-i18n'
-import { CanvasRenderer } from "echarts/renderers";
-import { BarChart, LineChart } from "echarts/charts";
-import VChart from 'vue-echarts'
 import {
   NLayout,
   NLayoutContent,
   NButton,
   NCard,
 } from 'naive-ui'
-import { type EChartsOption } from "echarts";
 
 const { t, locale } = useI18n()
 const currentLocale = locale

@@ -18,7 +18,7 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior(to, _, savedPosition) {
     // 如果路由meta中指定了不滚动到顶部，则使用保存的位置或默认位置
     if (to.meta.scrollToTop === false) {
       return savedPosition || { top: 0 }
