@@ -2,6 +2,16 @@
 import { callApi } from "@zayne-labs/callapi";
 import { computed, ref, onMounted } from "vue"
 import { useI18n } from 'vue-i18n'
+import { CanvasRenderer } from "echarts/renderers";
+import { BarChart, LineChart } from "echarts/charts";
+import VChart from 'vue-echarts'
+import {
+  NLayout,
+  NLayoutContent,
+  NButton,
+  NCard,
+} from 'naive-ui'
+import { type EChartsOption } from "echarts";
 
 const { t, locale } = useI18n()
 const currentLocale = locale
@@ -9,18 +19,13 @@ const currentLocale = locale
 function changeLanguage(lang: string) {
   locale.value = lang
 }
-import {
-  NLayout,
-  NLayoutContent,
-  NButton,
-  NCard,
-} from 'naive-ui'
+
 
 type TimeValuePair = [number, number]
 type TimeSeriesData = TimeValuePair[];
 const data = ref<TimeSeriesData | null>(null);
 const isLoading = ref(true);
-const error = ref<string | null>(null);
+const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -28,13 +33,13 @@ onMounted(async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await callApi<TimeSeriesData>(
+    const playerDataRes = await callApi<TimeSeriesData>(
       "https://bstats.org/api/v1/plugins/20909/charts/players/data",
       { signal: controller.signal }
     );
     
     clearTimeout(timeoutId);
-    data.value = response.data;
+    data.value = playerDataRes.data;
   } catch (err) {
     error.value = "无法加载玩家数据: " + (err instanceof Error ? err.message : String(err));
     console.error("API调用错误:", err);
@@ -52,7 +57,7 @@ const playerCount = computed(() => {
 <template>
   <NLayout class="layout">
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;">
-      <!-- 英雄区域 -->
+      <!-- Hero -->
       <div style="text-align: center; padding: 200px 24px; background: linear-gradient(135deg, #646cff 0%, #535bf2 100%); color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
           <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;">
             <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
@@ -72,7 +77,7 @@ const playerCount = computed(() => {
         </div>
       </div>
 
-      <!-- 特性区域 -->
+      <!-- Features -->
       <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.coreFeatures') }}</h2>
       <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
         <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;">
@@ -93,6 +98,10 @@ const playerCount = computed(() => {
           </NCard>
         </div>
       </div>
+
+      <!-- Statistics -->
+      <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.coreFeatures') }}</h2>
+
     </NLayoutContent>
   </NLayout>
 </template>

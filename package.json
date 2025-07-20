@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@zayne-labs/callapi": "^1.8.17",
+    "echarts": "^5.6.0",
     "vue": "^3.5.17",
+    "vue-echarts": "^7.0.3",
     "vue-i18n": "^9.8.0",
     "vue-router": "^4.5.1"
   },

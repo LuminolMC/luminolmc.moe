@@ -57,10 +57,10 @@ const currentRouteName = computed(() => route.name as string)
     <div style="padding-top: 20px;">
       <NLayoutFooter style="background: #f5f5f5; padding: 40px 24px;">
         <div class="footer-container">
-          <!-- <div class="footer-column">
+          <div class="footer-column">
             <h3>{{ t('message.gettingStarted') }}</h3>
             <ul>
-              <li><a href="#">{{ t('message.downloads') }}</a></li>
+              <li><RouterLink to="/download">{{ t('message.downloads') }}</RouterLink></li>
               <li><a href="#">{{ t('message.documentation') }}</a></li>
               <li><a href="#">{{ t('message.javadocs') }}</a></li>
             </ul>
@@ -68,33 +68,27 @@ const currentRouteName = computed(() => route.name as string)
           <div class="footer-column">
             <h3>{{ t('message.community') }}</h3>
             <ul>
-              <li><a href="#">{{ t('message.ourCommunity') }}</a></li>
-              <li><a href="#">{{ t('message.github') }}</a></li>
-              <li><a href="#">{{ t('message.discord') }}</a></li>
-              <li><a href="#">{{ t('message.forums') }}</a></li>
-              <li><a href="#">{{ t('message.twitter') }}</a></li>
-              <li><a href="#">{{ t('message.paperMC') }}</a></li>
+              <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqgroup') }}</a></li>
+              <li><a href="https://github.com/LuminolMC">Github</a></li>
+              <li><a href="https://discord.gg/Qd7m3V6eDx">Discord</a></li>
+              <li><a hre="https://t.me/LuminolMinecraft">Telegram</a></li>
             </ul>
           </div>
           <div class="footer-column">
             <h3>{{ t('message.ourTeam') }}</h3>
             <ul>
-              <li><a href="#">{{ t('message.contribute') }}</a></li>
-              <li><a href="#">{{ t('message.sponsors') }}</a></li>
-              <li><a href="#">{{ t('message.hangar') }}</a></li>
+              <li><a href="#">xxx</a></li>
+              <li><a href="#">xxx</a></li>
+              <li><a href="#">xxx</a></li>
             </ul>
           </div>
           <div class="footer-column">
-            <h3>{{ t('message.terms') }}</h3>
+            <h3>{{ t('message.friendship_links') }}</h3>
             <ul>
-              <li><a href="#">{{ t('message.terms') }}</a></li>
-              <li><a href="#">{{ t('message.privacyPolicy') }}</a></li>
-              <li><a href="#">{{ t('message.legalNotice') }}</a></li>
-              <li><a href="#">{{ t('message.hangarTerms') }}</a></li>
-              <li><a href="#">{{ t('message.hangarPrivacyPolicy') }}</a></li>
-              <li><a href="#">{{ t('message.communityGuidelines') }}</a></li>
+              <li><a href="https://www.locyan.cn/">Locyan Network</a></li>
+              <li><a href="https://www.rainyun.com/">雨云</a></li>
             </ul>
-          </div> -->
+          </div>
         </div>
         <div class="footer-bottom" style="margin-top: 30px; text-align: center;">
           <p>{{ t('message.copyright') }}</p>

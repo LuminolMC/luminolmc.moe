@@ -1,7 +1,7 @@
 export default {
   message: {
-    hello: 'Hello',
     welcome: 'Luminol is a fork based on Folia with many useful optimizations, configurable vanilla features, and more API support, designed specifically for survival and anarchy servers',
+    playerStatistics: 'Player Statistics',
     loadingPlayers: 'Loading player data...',
     startUsing: 'Get Started',
     learnMore: 'Learn More',
@@ -18,7 +18,8 @@ export default {
     apiSupportDesc: 'Enrich plugin development capabilities, continuously updated',
     downloadTitle: 'Download Luminol',
     downloadDesc: 'Choose the version suitable for your server and start using Luminol\'s powerful features',
-    github: 'GITHUB',
+    github: 'github',
+    github_upper_case: 'GITHUB',
     downloadNotice: 'The download page is being improved, please go to github release to download the latest version',
     stableVersion: 'Latest Stable Version',
     version: 'Version',
@@ -33,7 +34,7 @@ export default {
     home: 'Home',
     download: 'Download',
     copyright: '© 2025 Luminol Team. All rights reserved.',
-  servingPlayers: 'Luminol is currently serving {count} players',
+    servingPlayers: 'Luminol is currently serving {count} players',
     gettingStarted: 'Getting Started',
     downloads: 'Downloads',
     documentation: 'Documentation',
@@ -41,9 +42,7 @@ export default {
     community: 'Community',
     ourCommunity: 'Our Community',
     discord: 'Discord',
-    forums: 'Forums',
-    twitter: 'Twitter',
-    paperMC: 'PaperMC',
+    qqgroup: 'QQ Group',
     ourTeam: 'Our Team',
     contribute: 'Contribute',
     sponsors: 'Sponsors',
@@ -55,6 +54,7 @@ export default {
     hangarPrivacyPolicy: 'Hangar Privacy Policy',
     communityGuidelines: 'Community Guidelines',
     websiteVersion: 'Luminol/website @',
+    friendship_links: 'Friendship Links',
     disclaimer: 'This website is not an official Minecraft website and is not associated with Mojang Studios or Microsoft. All product and company names are trademarks or registered trademarks of their respective holders. Use of these names does not imply any affiliation or endorsement by them.'
   }
 }

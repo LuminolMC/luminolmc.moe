@@ -2,6 +2,7 @@ export default {
   message: {
     hello: '你好',
     welcome: 'Luminol 是一个基于Folia的分支，具有许多有用的优化、可配置的原版特性和更多的API支持，它专为生存和无政府服务器设计',
+    playerStatistics: '玩家统计',
     loadingPlayers: '加载玩家数据中...',
     startUsing: '开始使用',
     learnMore: '了解更多',
@@ -18,7 +19,8 @@ export default {
     apiSupportDesc: '丰富插件开发能力，持续更新中',
     downloadTitle: '下载 Luminol',
     downloadDesc: '选择适合您服务器的版本进行下载，开始使用 Luminol 的强大功能',
-    github: 'GITHUB',
+    github: 'github',
+    github_upper_case: 'GITHUB',
     downloadNotice: '下载页面正在完善，请先前往github release下载最新版本',
     stableVersion: '最新稳定版',
     version: '版本',
@@ -35,26 +37,19 @@ export default {
     copyright: '© 2025 Luminol Team. 保留所有权利。',
     servingPlayers: 'Luminol 现在正在服务 {count} 个玩家',
     gettingStarted: '开始使用',
+    
+
     downloads: '下载',
     documentation: '文档',
     javadocs: 'Java文档',
     community: '社区',
     ourCommunity: '我们的社区',
     discord: 'Discord',
-    forums: '论坛',
-    twitter: 'Twitter',
-    paperMC: 'PaperMC',
+    qqgroup: 'QQ 群',
     ourTeam: '我们的团队',
     contribute: '贡献',
     sponsors: '赞助商',
-    hangar: 'Hangar',
-    terms: '条款',
-    privacyPolicy: '隐私政策',
-    legalNotice: '法律声明',
-    hangarTerms: 'Hangar 条款',
-    hangarPrivacyPolicy: 'Hangar 隐私政策',
-    communityGuidelines: '社区准则',
-    websiteVersion: 'Luminol/website @',
+    friendship_links: '友情链接',
     disclaimer: '本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。所有产品和公司名称均为其各自持有者的商标或注册商标。使用这些名称并不意味着它们的任何关联或认可。'
   }
 }
