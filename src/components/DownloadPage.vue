@@ -30,7 +30,7 @@ const openGithub = () => {
           </div>
         <h1 style="font-size: 3rem; margin-bottom: 20px;">{{ t('message.downloadTitle') }}</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.downloadDesc') }}</p>
-        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openGithub">{{ t('message.github_upper_case  ') }}</NButton>
+        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openGithub">{{ t('message.github_upper_case') }}</NButton>
         <p style="font-size: 1rem;">{{ t('message.downloadNotice') }}</p>
       </div>
 
