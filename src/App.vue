@@ -71,7 +71,7 @@ const currentRouteName = computed(() => route.name as string)
               <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqgroup') }}</a></li>
               <li><a href="https://github.com/LuminolMC">Github</a></li>
               <li><a href="https://discord.gg/Qd7m3V6eDx">Discord</a></li>
-              <li><a hre="https://t.me/LuminolMinecraft">Telegram</a></li>
+              <li><a href="https://t.me/LuminolMinecraft">Telegram</a></li>
             </ul>
           </div>
           <div class="footer-column">
