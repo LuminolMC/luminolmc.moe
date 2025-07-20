@@ -4,7 +4,7 @@ import zh from './zh'
 
 export default createI18n({
   legacy: false,
-  locale: 'zh',
+  locale: 'zg',
   fallbackLocale: 'en',
   messages: {
     en,

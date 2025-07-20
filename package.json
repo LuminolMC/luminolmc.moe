@@ -11,6 +11,8 @@
   "dependencies": {
     "@zayne-labs/callapi": "^1.8.17",
     "echarts": "^5.6.0",
+    "pinia": "^3.0.3",
+    "pinia-plugin-persistedstate": "^4.4.1",
     "vue": "^3.5.17",
     "vue-echarts": "^7.0.3",
     "vue-i18n": "^9.8.0",

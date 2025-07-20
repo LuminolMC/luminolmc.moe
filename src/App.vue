@@ -1,15 +1,27 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-
-const { t } = useI18n()
 import { RouterLink, useRoute } from 'vue-router'
-import { h, computed } from 'vue'
+import { h, computed, onMounted } from 'vue'
 import {
   type MenuOption,
   NMenu,
   NAffix,
-  NLayoutFooter
+  NLayoutFooter,
+  NDropdown,
+  NText
 } from 'naive-ui'
+import { useLanguageStore } from './store/language'
+
+const { t, locale } = useI18n()
+
+function changeLanguage(lang: string) {
+    locale.value = lang
+    useLanguageStore().language = lang
+}
+
+onMounted(() => {
+  changeLanguage(useLanguageStore().language)
+})
 
 const menuOptions: MenuOption[] = [
   {
@@ -39,6 +51,26 @@ const menuOptions: MenuOption[] = [
       ),
   }  
 ]
+
+const dropdownOptions: MenuOption[] = [
+  {
+    label: '简体中文',
+    props: {
+      onClick: () => {        
+        changeLanguage('zh')
+      }
+    }
+  },
+  {
+    label: 'English',
+    props: {
+      onClick: () => {
+        changeLanguage('en')
+      }
+    }
+  }
+]
+
 const route = useRoute()
 const currentRouteName = computed(() => route.name as string)
 </script>
@@ -49,7 +81,12 @@ const currentRouteName = computed(() => route.name as string)
       <NLayoutHeader>
         <div class="header-container">
           <div class="logo">Luminol</div>
-          <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
+          <div style="flex-grow: 1;">
+            <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
+          </div>
+          <NDropdown trigger="hover" :options="dropdownOptions">
+            <NText class="language">{{ t('message.language') }}</NText>
+          </NDropdown>
         </div>
       </NLayoutHeader>
     </NAffix>
@@ -115,6 +152,14 @@ const currentRouteName = computed(() => route.name as string)
   font-weight: bold;
   color: #646cff;
   vertical-align: middle;
+}
+
+.language {
+  color: #646cff;
+}
+
+.language:hover {
+  cursor: pointer;
 }
 
 .menu {
