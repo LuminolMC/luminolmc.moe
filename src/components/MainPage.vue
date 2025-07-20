@@ -100,7 +100,7 @@ const playerCount = computed(() => {
       </div>
 
       <!-- Statistics -->
-      <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.coreFeatures') }}</h2>
+      <!-- <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.coreFeatures') }}</h2> -->
 
     </NLayoutContent>
   </NLayout>
