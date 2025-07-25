@@ -8,7 +8,6 @@ import {h, computed} from 'vue'
 import {
   type MenuOption,
   NMenu,
-  NAffix,
   NLayoutFooter, NButton
 } from 'naive-ui'
 
