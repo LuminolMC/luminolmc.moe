@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainPage from './components/MainPage.vue'
 import DownloadPage from './components/DownloadPage.vue'
+import TeamPage from "./components/TeamPage.vue";
 
 const routes = [
   {
@@ -12,6 +13,11 @@ const routes = [
     path: '/download',
     name: 'download',
     component: DownloadPage
+  },
+  {
+    path: '/team',
+    name: 'team',
+    component: TeamPage
   }
 ]
 

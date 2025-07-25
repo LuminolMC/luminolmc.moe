@@ -1,66 +1,87 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
+const { t, locale } = useI18n()
+const currentLocale = locale
 
-const { t } = useI18n()
-import { RouterLink, useRoute } from 'vue-router'
-import { h, computed } from 'vue'
+import {RouterLink, useRoute} from 'vue-router'
+import {h, computed} from 'vue'
 import {
   type MenuOption,
   NMenu,
   NAffix,
-  NLayoutFooter
+  NLayoutFooter, NButton
 } from 'naive-ui'
+
+function changeLanguage(lang: string) {
+  locale.value = lang
+}
 
 const menuOptions: MenuOption[] = [
   {
     key: 'home',
     label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'home',
-          }
-        },
-        { default: () => t('message.home') }
-      ),
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'home',
+              }
+            },
+            {default: () => t('message.home')}
+        ),
   },
   {
     key: 'download',
     label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'download',
-          }
-        },
-        { default: () => t('message.download') }
-      ),
-  }  
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'download',
+              }
+            },
+            {default: () => t('message.download')}
+        ),
+  },
+  {
+    key: 'team',
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'team',
+              }
+            },
+            {default: () => t('message.team')}
+        ),
+  }
 ]
 const route = useRoute()
 const currentRouteName = computed(() => route.name as string)
 </script>
 
 <template>
-  <div>
-    <NAffix>
-      <NLayoutHeader>
-        <div class="header-container">
-          <div class="logo">Luminol</div>
-          <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
+    <NLayoutHeader>
+      <div class="header-container">
+        <div class="logo">Luminol</div>
+        <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
+        <div style="top: 20px; right: 20px; display: flex; gap: 10px;">
+          <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
+          <NButton @click="changeLanguage('zh')" :type="currentLocale === 'zh' ? 'primary' : 'default'" size="small">中文</NButton>
         </div>
-      </NLayoutHeader>
-    </NAffix>
-    <router-view />
+      </div>
+    </NLayoutHeader>
+    <router-view/>
     <div style="padding-top: 20px;">
       <NLayoutFooter style="background: #f5f5f5; padding: 40px 24px;">
         <div class="footer-container">
           <div class="footer-column">
             <h3>{{ t('message.gettingStarted') }}</h3>
             <ul>
-              <li><RouterLink to="/download">{{ t('message.downloads') }}</RouterLink></li>
+              <li>
+                <RouterLink to="/download">{{ t('message.downloads') }}</RouterLink>
+              </li>
               <li><a href="#">{{ t('message.documentation') }}</a></li>
               <li><a href="#">{{ t('message.javadocs') }}</a></li>
             </ul>
@@ -75,11 +96,11 @@ const currentRouteName = computed(() => route.name as string)
             </ul>
           </div>
           <div class="footer-column">
-            <h3>{{ t('message.ourTeam') }}</h3>
+            <h3>LuminolMC</h3>
             <ul>
-              <li><a href="#">xxx</a></li>
-              <li><a href="#">xxx</a></li>
-              <li><a href="#">xxx</a></li>
+              <li><a href="#">{{ t('message.ourTeam') }}</a></li>
+              <li><a href="#">{{ t('message.contribute') }}</a></li>
+              <li><a href="#">{{ t('message.sponsors') }}</a></li>
             </ul>
           </div>
           <div class="footer-column">
@@ -94,10 +115,10 @@ const currentRouteName = computed(() => route.name as string)
           <p>{{ t('message.copyright') }}</p>
           <!-- <p style="margin-top: 10px; font-size: 12px;">{{ t('message.websiteVersion') }} 02ef2e7</p> -->
           <p style="margin-top: 10px; font-size: 12px;">{{ t('message.disclaimer') }}</p>
+<!--          <p><a href="https://github.com/LuminolMC/luminolmc.moe">luminolmc.moe @ {{ currentCommit }}</a></p>-->
         </div>
       </NLayoutFooter>
     </div>
-  </div>
 
 </template>
 
@@ -107,13 +128,14 @@ const currentRouteName = computed(() => route.name as string)
   align-items: center;
   height: 60px;
   justify-content: space-between;
+  margin-top: 0;
   padding: 0 40px;
 }
 
 .logo {
   font-size: 24px;
   font-weight: bold;
-  color: #646cff;
+  color: #b6ade6;
   vertical-align: middle;
 }
 
@@ -127,10 +149,12 @@ const currentRouteName = computed(() => route.name as string)
   .header-container {
     padding: 0 20px;
   }
+
   .logo {
     font-size: 20px;
   }
 }
+
 .footer-container {
   display: flex;
   justify-content: space-between;
@@ -162,7 +186,7 @@ const currentRouteName = computed(() => route.name as string)
 }
 
 .footer-column a {
-  color: #646cff;
+  color: #b6ade6;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -177,6 +201,7 @@ const currentRouteName = computed(() => route.name as string)
     flex-direction: column;
     align-items: center;
   }
+
   .footer-column {
     text-align: center;
   }
