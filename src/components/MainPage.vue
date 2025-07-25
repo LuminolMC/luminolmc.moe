@@ -65,8 +65,14 @@ const softwareItems = [
       <div style="text-align: center; padding: 200px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
         <h1 style="font-size: 4rem; margin-bottom: 20px;">LuminolMC</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.welcome') }}</p>
-        <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
-        <NButton strong secondary size="large">{{ t('message.learnMore') }}</NButton>
+        <div style="display: inline-flex; align-items: center;">
+          <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
+          <NButton strong secondary size="large" style="margin-right: 12px;">{{ t('message.learnMore') }}</NButton>
+          <NButton type="info" strong secondary size="large" style="color: black; margin-right: 0;" @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
+            在&nbsp<img src="./rainyun.svg" alt="rainyun" height="20px"/>&nbsp上部署
+          </NButton>
+        </div>
+
         <div style="font-size: 1.1rem">
           <p v-if="!isLoading && !error">{{ $t('message.servingPlayers', { count: sum }) }}</p>
           <p v-else-if="isLoading">{{ $t('message.loadingPlayers') }}</p>
