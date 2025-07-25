@@ -99,7 +99,7 @@ const currentRouteName = computed(() => route.name as string)
             <ul>
               <li><a href="#">{{ t('message.ourTeam') }}</a></li>
               <li><a href="#">{{ t('message.contribute') }}</a></li>
-              <li><a href="#">{{ t('message.sponsors') }}</a></li>
+              <li><a href="https://afdian.com/a/Luminol">{{ t('message.sponsors') }}</a></li>
             </ul>
           </div>
           <div class="footer-column">
