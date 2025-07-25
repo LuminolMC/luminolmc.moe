@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {NButton} from "naive-ui";
-// import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n'
 import ProfileCard from "./ProfileCard.vue";
-// const { t } = useI18n()
+const { t } = useI18n()
 
 const goTo = (path: string) => {
   window.open(path)
@@ -14,21 +14,21 @@ const goTo = (path: string) => {
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;" class="hero">
       <!-- Hero -->
       <div class="hero">
-        <h1 style="font-size: 3.5rem; margin-bottom: 20px;">Luminol Team</h1>
-        <p style="font-size: 1.2rem; max-width: 800px;">认识一下 LuminolMC 背后的成员，这是一个 Minecraft 软件组织，致力于通过更快、更安全的软件改善游戏生态系统。</p>
-        <NButton type="primary" size="large" style="margin-right: 12px;" @click="goTo('https://github.com/LuminolMC')">GITHUB</NButton>
-        <NButton strong secondary size="large" @click="goTo('https://afdian.com/a/Luminol')">赞助我们</NButton>
+        <h1 style="font-size: 3.5rem; margin-bottom: 20px;">{{ t('message.teamTitle') }}</h1>
+        <p style="font-size: 1.2rem; max-width: 800px;">{{ t('message.teamIntroduction') }}</p>
+        <NButton type="primary" size="large" style="margin-right: 12px;" @click="goTo('https://github.com/LuminolMC')">{{ t('message.github_upper_case') }}</NButton>
+        <NButton strong secondary size="large" @click="goTo('https://afdian.com/a/Luminol')">{{ t('message.sponsorUs') }}</NButton>
       </div>
     </NLayoutContent>
   </NLayout>
   <NLayout class="member" style="margin: auto 100px">
     <NFlex vertical>
-      <p>核心成员</p>
+      <p>{{ t('message.coreMembers') }}</p>
       <NGrid cols="1 400:2 600:3" style="width: 100%;">
         <NGridItem>
           <ProfileCard
               name="Earthme"
-              description="Luminol core dev"
+              :description="t('message.coreDev')"
               avatar="https://avatars.githubusercontent.com/u/79621885?v=4"
           />
         </NGridItem>

@@ -35,6 +35,18 @@ export default {
     download: 'Download',
     copyright: '© 2025 Luminol Team. All rights reserved.',
     servingPlayers: 'Luminol is currently serving {count} players',
+    software: {
+        luminolDesc: 'Based on Folia, attempting to fix some features and provide new APIs',
+        lophineDesc: 'Based on Luminol, providing more features needed for technical Minecraft and restoring some old features',
+        lightningLuminolDesc: 'Based on Luminol, fixing damage to BukkitAPI and ensuring maximum compatibility with old plugins'
+    },
+    teamTitle: 'Luminol Team',
+    teamIntroduction: 'Meet the members behind LuminolMC, a Minecraft software organization dedicated to improving the game ecosystem with faster, more secure software',
+    sponsorUs: 'Sponsor Us',
+    coreMembers: 'Core Members',
+    coreDev: 'Luminol core developer',
+    team: 'Team',
+    majorProject: 'Major Projects',
     gettingStarted: 'Getting Started',
     downloads: 'Downloads',
     documentation: 'Documentation',

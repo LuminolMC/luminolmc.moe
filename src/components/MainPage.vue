@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { callApi } from "@zayne-labs/callapi";
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import {
@@ -51,11 +51,13 @@ const goTo = (url: string) => {
   window.open(url)
 }
 
-const softwareItems = [
-  { name: "Luminol", description: "基于 Folia ，尝试修复一些特性以及提供一些新的API", link: "https://github.com/LuminolMC/Luminol" },
-  { name: "Lophine", description: "基于Luminol ，提供更多生电所需的特性以及还原部分旧特性", link: "https://github.com/LuminolMC/Lophine" },
-  { name: "LightingLuminol", description: "基于 Luminol ，修复对 BukkitAPI 的破坏，最大程度保证旧插件兼容性", link: "https://github.com/LuminolMC/LighitngLuminol" },
-]
+const softwareItems = computed(() => {
+  return [
+    { name: "Luminol", description: t('message.software.luminolDesc'), link: "https://github.com/LuminolMC/Luminol" },
+    { name: "Lophine", description: t('message.software.lophineDesc'), link: "https://github.com/LuminolMC/Lophine" },
+    { name: "LightingLuminol", description: t('message.software.lightningLuminolDesc'), link: "https://github.com/LuminolMC/LighitningLuminol" },
+  ]
+})
 </script>
 
 <template>

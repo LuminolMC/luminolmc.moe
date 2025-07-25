@@ -38,6 +38,16 @@ export default {
     team: '团队',
     copyright: '© 2025 Luminol Team. 保留所有权利。',
     servingPlayers: 'Luminol 系核心现在正在服务 {count} 个玩家',
+    software: {
+        luminolDesc: '基于 Folia，尝试修复一些特性以及提供一些新的API',
+        lophineDesc: '基于 Luminol，提供更多生电所需的特性以及还原部分旧特性',
+        lightningLuminolDesc: '基于 Luminol，修复对 BukkitAPI 的破坏，最大程度保证旧插件兼容性'
+    },
+    teamTitle: 'Luminol 团队',
+    teamIntroduction: '认识一下 LuminolMC 背后的成员，这是一个 Minecraft 软件组织，致力于通过更快、更安全的软件改善游戏生态系统。',
+    sponsorUs: '赞助我们',
+    coreMembers: '核心成员',
+    coreDev: 'Luminol 核心开发者',
     gettingStarted: '开始使用',
     downloads: '下载',
     documentation: '文档',
