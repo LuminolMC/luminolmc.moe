@@ -54,6 +54,17 @@ const menuOptions: MenuOption[] = [
             },
             {default: () => t('message.team')}
         ),
+  },
+  {
+    key: 'luminolcraft',
+    label: () =>
+        h(
+            'a',
+            {
+              href: 'https://craft.luminolsuki.moe/',
+            },
+            'LuminolCraft'
+        ),
   }
 ]
 const route = useRoute()
