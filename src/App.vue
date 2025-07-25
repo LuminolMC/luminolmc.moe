@@ -4,15 +4,20 @@ const { t, locale } = useI18n()
 const currentLocale = locale
 
 import {RouterLink, useRoute} from 'vue-router'
-import {h, computed} from 'vue'
+import {h, computed, type Component} from 'vue'
 import {
   type MenuOption,
   NMenu,
-  NLayoutFooter, NButton
+  NLayoutFooter, NButton, NIcon
 } from 'naive-ui'
+import {ExternalLink} from "@vicons/tabler";
 
 function changeLanguage(lang: string) {
   locale.value = lang
+}
+
+function renderIcon(icon: Component) {
+  return () => h(NIcon, null, { default: () => h(icon) })
 }
 
 const menuOptions: MenuOption[] = [
@@ -65,6 +70,7 @@ const menuOptions: MenuOption[] = [
             },
             'LuminolCraft'
         ),
+        icon: renderIcon(ExternalLink)
   }
 ]
 const route = useRoute()
