@@ -55,7 +55,7 @@ const softwareItems = computed(() => {
   return [
     { name: "Luminol", description: t('message.software.luminolDesc'), link: "https://github.com/LuminolMC/Luminol" },
     { name: "Lophine", description: t('message.software.lophineDesc'), link: "https://github.com/LuminolMC/Lophine" },
-    { name: "LightingLuminol", description: t('message.software.lightningLuminolDesc'), link: "https://github.com/LuminolMC/LighitningLuminol" },
+    { name: "LightingLuminol", description: t('message.software.lightningLuminolDesc'), link: "https://github.com/LuminolMC/LightingLuminol" },
   ]
 })
 </script>
