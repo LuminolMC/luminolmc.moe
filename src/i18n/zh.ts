@@ -60,6 +60,7 @@ export default {
     contribute: '贡献',
     sponsors: '赞助',
     friendship_links: '友情链接',
-    disclaimer: '本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。所有产品和公司名称均为其各自持有者的商标或注册商标。使用这些名称并不意味着它们的任何关联或认可。'
+    disclaimer: '本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。所有产品和公司名称均为其各自持有者的商标或注册商标。使用这些名称并不意味着它们的任何关联或认可。',
+    language: '选择语言'
   }
 }

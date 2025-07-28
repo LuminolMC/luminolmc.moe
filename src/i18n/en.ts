@@ -67,6 +67,7 @@ export default {
     communityGuidelines: 'Community Guidelines',
     websiteVersion: 'Luminol/website @',
     friendship_links: 'Friendship Links',
-    disclaimer: 'This website is not an official Minecraft website and is not associated with Mojang Studios or Microsoft. All product and company names are trademarks or registered trademarks of their respective holders. Use of these names does not imply any affiliation or endorsement by them.'
+    disclaimer: 'This website is not an official Minecraft website and is not associated with Mojang Studios or Microsoft. All product and company names are trademarks or registered trademarks of their respective holders. Use of these names does not imply any affiliation or endorsement by them.',
+    language: 'Language'
   }
 }

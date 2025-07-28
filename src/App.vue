@@ -1,24 +1,32 @@
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n'
-const { t, locale } = useI18n()
-const currentLocale = locale
-
-import {RouterLink, useRoute} from 'vue-router'
-import {h, computed, type Component} from 'vue'
+import { useI18n } from 'vue-i18n'
+import { RouterLink, useRoute } from 'vue-router'
+import { h, computed, onMounted, type Component } from 'vue'
+import {ExternalLink} from "@vicons/tabler";
 import {
   type MenuOption,
   NMenu,
-  NLayoutFooter, NButton, NIcon
+  NLayoutFooter,
+  NDropdown,
+  NText,
+  NIcon
 } from 'naive-ui'
-import {ExternalLink} from "@vicons/tabler";
+import { useLanguageStore } from './store/language'
+
+const { t, locale } = useI18n()
 
 function changeLanguage(lang: string) {
-  locale.value = lang
+    locale.value = lang
+    useLanguageStore().language = lang
 }
 
 function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
+
+onMounted(() => {
+  changeLanguage(useLanguageStore().language)
+})
 
 const menuOptions: MenuOption[] = [
   {
@@ -73,6 +81,26 @@ const menuOptions: MenuOption[] = [
         icon: renderIcon(ExternalLink)
   }
 ]
+
+const dropdownOptions: MenuOption[] = [
+  {
+    label: '简体中文',
+    props: {
+      onClick: () => {        
+        changeLanguage('zh')
+      }
+    }
+  },
+  {
+    label: 'English',
+    props: {
+      onClick: () => {
+        changeLanguage('en')
+      }
+    }
+  }
+]
+
 const route = useRoute()
 const currentRouteName = computed(() => route.name as string)
 </script>
@@ -81,11 +109,12 @@ const currentRouteName = computed(() => route.name as string)
     <NLayoutHeader>
       <div class="header-container">
         <div class="logo">Luminol</div>
-        <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
-        <div style="top: 20px; right: 20px; display: flex; gap: 10px;">
-          <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
-          <NButton @click="changeLanguage('zh')" :type="currentLocale === 'zh' ? 'primary' : 'default'" size="small">中文</NButton>
+        <div style="flex-grow: 1;">
+          <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
         </div>
+        <NDropdown trigger="hover" :options="dropdownOptions">
+          <NText class="language">{{ t('message.language') }}</NText>
+        </NDropdown>
       </div>
     </NLayoutHeader>
     <router-view/>
@@ -153,6 +182,14 @@ const currentRouteName = computed(() => route.name as string)
   font-weight: bold;
   color: #b6ade6;
   vertical-align: middle;
+}
+
+.language {
+  color: #646cff;
+}
+
+.language:hover {
+  cursor: pointer;
 }
 
 .menu {
