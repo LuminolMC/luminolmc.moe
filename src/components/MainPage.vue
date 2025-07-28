@@ -65,7 +65,11 @@ const softwareItems = computed(() => {
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;">
       <!-- Hero -->
       <div style="text-align: center; padding: 200px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
-        <h1 style="font-size: 4rem; margin-bottom: 20px;">LuminolMC</h1>
+          <!-- <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;">
+            <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
+            <NButton @click="changeLanguage('zh')" :type="currentLocale === 'zh' ? 'primary' : 'default'" size="small">中文</NButton>
+          </div> -->
+        <h1 style="font-size: 3rem; margin-bottom: 20px;">Luminol</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.welcome') }}</p>
         <div style="display: inline-flex; align-items: center;">
           <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
