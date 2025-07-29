@@ -69,7 +69,7 @@ const softwareItems = computed(() => {
             <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
             <NButton @click="changeLanguage('zh')" :type="currentLocale === 'zh' ? 'primary' : 'default'" size="small">中文</NButton>
           </div> -->
-        <h1 style="font-size: 3rem; margin-bottom: 20px;">Luminol</h1>
+        <h1 style="font-size: 4rem; margin-bottom: 20px;">Luminol</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.welcome') }}</p>
         <div style="display: inline-flex; align-items: center;">
           <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
