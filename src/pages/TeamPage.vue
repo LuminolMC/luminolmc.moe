@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {NButton} from "naive-ui";
 import { useI18n } from 'vue-i18n'
-import ProfileCard from "./ProfileCard.vue";
+import ProfileCard from "../components/ProfileCard.vue";
 const { t } = useI18n()
 
 const goTo = (path: string) => {

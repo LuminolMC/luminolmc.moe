@@ -75,7 +75,7 @@ const softwareItems = computed(() => {
           <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
           <NButton strong secondary size="large" style="margin-right: 12px;">{{ t('message.learnMore') }}</NButton>
           <NButton type="info" strong secondary size="large" style="color: black; margin-right: 0;" @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
-            在&nbsp<img src="./rainyun.svg" alt="rainyun" height="20px"/>&nbsp上部署
+            在&nbsp<img src="../assets/rainyun.svg" alt="rainyun" height="20px"/>&nbsp上部署
           </NButton>
         </div>
 

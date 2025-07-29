@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainPage from './components/MainPage.vue'
-import DownloadPage from './components/DownloadPage.vue'
-import TeamPage from "./components/TeamPage.vue";
+import MainPage from './pages/MainPage.vue'
+import DownloadPage from './pages/DownloadPage.vue'
+import TeamPage from "./pages/TeamPage.vue";
 
 const routes = [
   {
