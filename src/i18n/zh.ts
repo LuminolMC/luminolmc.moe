@@ -39,7 +39,7 @@ export default {
     findYourJar: '构建完成后，你可以在 build/libs 找到产物',
     home: '主页',
     download: '下载',
-    team: '团队',
+    teamNav: '团队',
     copyright: '© 2025 Luminol Team. 保留所有权利。',
     servingPlayers: 'Luminol 系核心现在正在服务 {count} 个玩家',
     software: {
@@ -65,6 +65,15 @@ export default {
     sponsors: '赞助',
     friendship_links: '友情链接',
     disclaimer: '本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。所有产品和公司名称均为其各自持有者的商标或注册商标。使用这些名称并不意味着它们的任何关联或认可。',
-    language: '选择语言'
+    language: '选择语言',
+    team: {
+      majorContributors: '核心贡献者',
+      majorContributorsDesc: '项目的主要开发者',
+      allContributors: '贡献者',
+      allContributorsDesc: '参与项目开发的所有开发者',
+      contributions: '次提交',
+      loading: '加载中...',
+      error: '加载失败'
+    }
   }
 }

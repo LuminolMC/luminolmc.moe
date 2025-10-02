@@ -39,7 +39,7 @@ export default {
     findYourJar: 'After building, you can find the artifact in build/libs',
     home: 'Home',
     download: 'Downloads',
-    team: 'Team',
+    teamNav: 'Team',
     copyright: '© 2025 Luminol Team. All rights reserved.',
     servingPlayers: 'Luminol core is currently serving {count} players',
     software: {
@@ -65,6 +65,15 @@ export default {
     sponsors: 'Sponsors',
     friendship_links: 'Friendship Links',
     disclaimer: 'This website is not affiliated with Minecraft or Mojang Studios. All product and company names are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.',
-    language: 'Language'
+    language: 'Language',
+    team: {
+      majorContributors: 'Core Contributors',
+      majorContributorsDesc: 'Main developers of the project',
+      allContributors: 'Contributors',
+      allContributorsDesc: 'Everyone who contributed to the project',
+      contributions: ' commits',
+      loading: 'Loading...',
+      error: 'Failed to load'
+    }
   }
 }
