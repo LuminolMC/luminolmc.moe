@@ -6,8 +6,7 @@ import { useGitHubContributors } from "../services/github";
 import { coreContributors } from "../data/coreContributors";
 
 const { t, locale } = useI18n()
-const { contributors, isLoading, error, fetchContributors, getMinorContributors } = useGitHubContributors()
-
+const { contributors, isLoading, error, fetchContributors } = useGitHubContributors()
 const goTo = (path: string) => {
   window.open(path, '_blank')
 }
