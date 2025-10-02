@@ -531,6 +531,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1200px) {
+
   .minor-contributors-flex .minor-contributor {
     margin: 5px;
   }
@@ -544,6 +545,7 @@ onUnmounted(() => {
   .minor-contributors-flex .minor-contributor {
     margin: 4px;
   }
+
 }
 
 @media (max-width: 480px) {
@@ -554,6 +556,7 @@ onUnmounted(() => {
   .minor-contributors-flex .minor-contributor {
     margin: 3px;
   }
+
 }
 
 .minor-contributor {
