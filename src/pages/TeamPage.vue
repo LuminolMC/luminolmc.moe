@@ -3,17 +3,29 @@ import { NButton, NH2, NText, NAvatar, NSpin, NAlert } from "naive-ui";
 import { useI18n } from 'vue-i18n'
 import { onMounted, onUnmounted, computed, ref } from 'vue'
 import { useGitHubContributors } from "../services/github";
+import { coreContributors } from "../data/coreContributors";
 
-const { t } = useI18n()
-const { contributors, isLoading, error, fetchContributors, getMajorContributors, getMinorContributors } = useGitHubContributors()
+const { t, locale } = useI18n()
+const { contributors, isLoading, error, fetchContributors, getMinorContributors } = useGitHubContributors()
 
 const goTo = (path: string) => {
   window.open(path, '_blank')
 }
 
 
-const majorContributors = computed(() => getMajorContributors(contributors.value))
-const minorContributors = computed(() => getMinorContributors(contributors.value))
+// 使用手动配置的核心贡献者
+const manualCoreContributors = computed(() => coreContributors)
+
+// 所有贡献者（排除手动配置的核心贡献者）
+const allContributors = computed(() => {
+  const coreUsernames = coreContributors.map(c => c.github)
+  return contributors.value.filter(c => !coreUsernames.includes(c.login))
+})
+
+const getContributorRole = (contributor: any) => {
+  const currentLocale = locale.value as 'zh' | 'en'
+  return contributor.role[currentLocale] || contributor.role.en
+}
 
 // 响应式头像大小
 const windowWidth = ref(window.innerWidth)
@@ -94,27 +106,41 @@ onUnmounted(() => {
           {{ t('message.team.error') }}: {{ error }}
         </NAlert>
 
-        <div v-else-if="majorContributors.length > 0" class="contributors-flex">
-          <div 
-            v-for="contributor in majorContributors" 
-            :key="contributor.id"
-            class="contributor-card major-contributor"
-            @click="goTo(contributor.html_url)"
-          >
-            <NAvatar
-              :size="80"
-              :src="contributor.avatar_url"
-              :fallback-src="`https://github.com/${contributor.login}.png`"
-              class="contributor-avatar"
-            />
-            <div class="contributor-info">
-              <div class="contributor-name">{{ contributor.login }}</div>
-              <div class="contributor-stats">
-                {{ contributor.contributions }}{{ t('message.team.contributions') }}
-              </div>
-            </div>
-          </div>
-        </div>
+         <div class="contributors-flex">
+           <article 
+             v-for="contributor in manualCoreContributors" 
+             :key="contributor.github"
+             class="contributor-card"
+             @click="goTo(`https://github.com/${contributor.github}`)"
+           >
+             <div class="contributor-layout">
+               <div class="contributor-avatar-container">
+                 <NAvatar
+                   :size="80"
+                   :src="contributor.avatar"
+                   :fallback-src="`https://github.com/${contributor.github}.png`"
+                   class="contributor-avatar"
+                 />
+               </div>
+               <div class="contributor-info">
+                 <div class="contributor-name">{{ contributor.name }}</div>
+                 <div class="contributor-role">{{ getContributorRole(contributor) }}</div>
+                 <a 
+                   :href="`https://github.com/${contributor.github}`"
+                   class="contributor-github-link"
+                   @click.stop
+                   target="_blank"
+                   rel="noreferrer"
+                 >
+                   <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                   </svg>
+                   {{ contributor.github }}
+                 </a>
+               </div>
+             </div>
+           </article>
+         </div>
       </section>
 
       <!-- All Contributors Section -->
@@ -134,14 +160,14 @@ onUnmounted(() => {
           </NSpin>
         </div>
 
-        <div v-else-if="minorContributors.length > 0" class="minor-contributors-flex">
-          <div 
-            v-for="contributor in minorContributors" 
-            :key="contributor.id"
-            class="minor-contributor"
-            @click="goTo(contributor.html_url)"
-            :title="`${contributor.login} - ${contributor.contributions}${t('message.team.contributions')}`"
-          >
+         <div v-else-if="allContributors.length > 0" class="minor-contributors-flex">
+           <div 
+             v-for="contributor in allContributors" 
+             :key="contributor.id"
+             class="minor-contributor"
+             @click="goTo(contributor.html_url)"
+             :title="`${contributor.login} - ${contributor.contributions}${t('message.team.contributions')}`"
+           >
             <NAvatar
               :size="avatarSize"
               :src="contributor.avatar_url"
@@ -325,125 +351,167 @@ onUnmounted(() => {
 /* Contributors Styles */
 .contributors-flex {
   display: flex;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  flex-wrap: wrap;
   margin-top: 2rem;
+  justify-content: center;
 }
 
-/* Contributors Grid 响应式布局 */
+/* Contributors Flex 响应式布局 */
+.contributors-flex .contributor-card {
+  margin: 0.75rem;
+  flex: 1 1 280px;
+  max-width: 400px;
+}
+
 @media (min-width: 1920px) {
-  .contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+  .contributors-flex .contributor-card {
+    margin: 0.75rem;
+    flex: 1 1 400px;
   }
 }
 
-@media (max-width: 1200px) {
-  .contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
+@media (min-width: 1200px) and (max-width: 1919px) {
+  .contributors-flex .contributor-card {
+    margin: 0.625rem;
+    flex: 1 1 350px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .contributors-flex .contributor-card {
+    margin: 0.5rem;
+    flex: 1 1 320px;
   }
 }
 
 @media (max-width: 768px) {
-  .contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .contributors-flex {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+  .contributors-flex .contributor-card {
+    margin: 0.5rem;
+    flex: 1 1 100%;
   }
 }
 
 .contributor-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1.5rem;
   border: 1px solid var(--n-border-color);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--n-card-color);
   cursor: pointer;
   transition: all 0.3s ease;
-  text-align: center;
+  padding: 1rem;
 }
 
 .contributor-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: var(--n-primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-.major-contributor {
-  min-height: 180px;
+.contributor-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: flex-start;
 }
 
-/* Contributor Card 响应式 */
-@media (max-width: 768px) {
-  .contributor-card {
-    padding: 1.25rem;
-  }
-  
-  .major-contributor {
-    min-height: 160px;
-  }
-}
-
-@media (max-width: 480px) {
-  .contributor-card {
-    padding: 1rem;
-  }
-  
-  .major-contributor {
-    min-height: 140px;
-  }
-  
-  .contributor-name {
-    font-size: 1rem;
-  }
-  
-  .contributor-stats {
-    font-size: 0.85rem;
-  }
+.contributor-avatar-container {
+  flex-shrink: 0;
 }
 
 .contributor-avatar {
-  margin-bottom: 1rem;
-  border: 2px solid var(--n-border-color);
-  transition: border-color 0.3s ease;
-}
-
-.contributor-card:hover .contributor-avatar {
-  border-color: var(--n-primary-color);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .contributor-info {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
 .contributor-name {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--n-text-color);
-  margin-bottom: 0.5rem;
+  word-break: break-all;
 }
 
-.contributor-stats {
+.contributor-role {
   font-size: 0.9rem;
   color: var(--n-text-color-2);
+  font-style: italic;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.contributor-github-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #18a058;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  word-break: break-all;
+}
+
+.contributor-github-link:hover {
+  color: #36ad6a;
+}
+
+.github-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Contributor Card 响应式 */
+@media (max-width: 768px) {
+  .contributor-layout {
+    gap: 1rem;
+  }
+  
+  .contributor-name {
+    font-size: 1rem;
+  }
+  
+  .contributor-role {
+    font-size: 0.85rem;
+  }
+  
+  .contributor-github-link {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contributor-card {
+    padding: 0.75rem;
+  }
+  
+  .contributor-layout {
+    gap: 0.75rem;
+  }
+  
+  .contributor-name {
+    font-size: 0.95rem;
+  }
+  
+  .contributor-role {
+    font-size: 0.8rem;
+  }
+  
+  .contributor-github-link {
+    font-size: 0.8rem;
+  }
 }
 
 .minor-contributors-flex {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   margin-top: 2rem;
   padding: 1rem;
   background: var(--n-card-color);
@@ -451,34 +519,40 @@ onUnmounted(() => {
   border: 1px solid var(--n-border-color);
 }
 
+.minor-contributors-flex .minor-contributor {
+  margin: 6px;
+}
+
 
 @media (min-width: 1920px) {
-  .minor-contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-    gap: 10px;
+  .minor-contributors-flex .minor-contributor {
+    margin: 5px;
   }
 }
 
 @media (max-width: 1200px) {
-  .minor-contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
-    gap: 10px;
+  .minor-contributors-flex .minor-contributor {
+    margin: 5px;
   }
 }
 
 @media (max-width: 768px) {
   .minor-contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-    gap: 8px;
     padding: 0.75rem;
+  }
+  
+  .minor-contributors-flex .minor-contributor {
+    margin: 4px;
   }
 }
 
 @media (max-width: 480px) {
   .minor-contributors-flex {
-    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-    gap: 6px;
     padding: 0.5rem;
+  }
+  
+  .minor-contributors-flex .minor-contributor {
+    margin: 3px;
   }
 }
 
