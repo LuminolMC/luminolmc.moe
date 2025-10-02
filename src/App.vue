@@ -65,7 +65,7 @@ const menuOptions: MenuOption[] = [
                 name: 'team',
               }
             },
-            {default: () => t('message.team')}
+            {default: () => t('message.teamNav')}
         ),
   },
   {
