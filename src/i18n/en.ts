@@ -18,10 +18,10 @@ export default {
     expandedApiSupport: 'Extended API Support',
     apiSupportDesc: 'Enriched plugin development capabilities with continuous updates',
     downloadTitle: 'Download Luminol',
-    downloadDesc: 'Choose the version that suits your server and experience the powerful features of Luminol',
+    downloadDesc: 'Choose the version that suits your server and experience the powerful features of {0}',
     github: 'github',
     github_upper_case: 'GITHUB',
-    downloadNotice: 'Visit GitHub Releases to download the latest version of Luminol',
+    downloadNotice: 'Visit GitHub Releases to download the latest version of {0}',
     stableVersion: 'Latest Stable Release',
     version: 'Version',
     majorProject: 'Main Projects',
@@ -31,9 +31,9 @@ export default {
     downloadDev: 'Download Dev',
     installGuide: 'Installation Guide',
     installGuides: {
-      1: 'Download the appropriate Luminol version for your needs',
+      1: 'Download the appropriate {0} version for your needs',
       2: 'Run the following command in your terminal: ',
-      3: 'Enjoy the optimized experience with Luminol!'
+      3: 'Enjoy the optimized experience with {0}!'
     },
     diyBuild: 'Build From Source',
     findYourJar: 'After building, you can find the artifact in build/libs',

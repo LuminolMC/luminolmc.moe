@@ -17,11 +17,11 @@ export default {
     saveFormatsDesc: '支持linear和b_linear格式，兼容更多场景',
     expandedApiSupport: '扩展API支持',
     apiSupportDesc: '丰富插件开发能力，持续更新中',
-    downloadTitle: '下载 Luminol',
-    downloadDesc: '选择适合您服务器的版本进行下载，开始使用 Luminol 的强大功能',
+    downloadTitle: '下载 {0}',
+    downloadDesc: '选择适合您服务器的版本进行下载，开始使用 {0} 的强大功能',
     github: 'github',
     github_upper_case: 'GITHUB',
-    downloadNotice: '前往 github release 下载最新的 Luminol',
+    downloadNotice: '前往 github release 下载最新的 {0}',
     stableVersion: '最新稳定版',
     version: '版本',
     majorProject: '主要项目',
@@ -31,9 +31,9 @@ export default {
     downloadDev: '下载开发版',
     installGuide: '使用指南',
     installGuides: {
-      1: '下载适合您的 Luminol 版本',
+      1: '下载适合您的 {0} 版本',
       2: '在终端运行 ',
-      3: '享受 Luminol 带来的优化体验！'
+      3: '享受 {0} 带来的优化体验！'
     },
     diyBuild: '自行构建',
     findYourJar: '构建完成后，你可以在 build/libs 找到产物',
