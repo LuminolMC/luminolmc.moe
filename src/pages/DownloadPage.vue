@@ -70,11 +70,37 @@ const getGradleCommand = () => {
   return './gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar'
 }
 
-// 格式化发布时间为UTC时间包含时分秒
+// 使用 Intl.DateTimeFormat API 格式化发布时间为UTC时间包含时分秒(CN使用UTC+8)
 const formatReleaseDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+  const isChinese = useI18n().locale.value === 'zh';
+
+  if (isChinese) {
+    // CN使用UTC+8
+    return new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'Asia/Shanghai',
+      timeZoneName: 'short'
+    }).format(date);
+  } else {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short'
+    }).format(date);
+  }
 }
+
 
 const fetchReleases = async () => {
   try {
@@ -183,7 +209,7 @@ onMounted(() => {
               :key="release.tag_name"
               :title="t('message.stableVersion')"
               bordered
-              style="flex: 1 1 350px; max-width: 400px; padding: 30px;"
+              style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
             >
               <p style="margin-bottom: 20px;">
                 {{ t('message.version') }}:
@@ -207,7 +233,7 @@ onMounted(() => {
               :key="release.tag_name"
               :title="t('message.devVersion')"
               bordered
-              style="flex: 1 1 350px; max-width: 400px; padding: 30px;"
+              style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
             >
               <p style="margin-bottom: 20px;">
                 {{ t('message.version') }}:

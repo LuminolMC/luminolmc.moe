@@ -59,7 +59,7 @@ export default {
     community: 'Community',
     ourCommunity: 'Our Community',
     discord: 'Discord',
-    qqgroup: 'QQ Group',
+    qqGroup: 'QQ Group',
     ourTeam: 'Our Team',
     contribute: 'Contribute',
     sponsors: 'Sponsors',

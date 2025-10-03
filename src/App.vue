@@ -134,7 +134,7 @@ const currentRouteName = computed(() => route.name as string)
           <div class="footer-column">
             <h3>{{ t('message.community') }}</h3>
             <ul>
-              <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqgroup') }}</a></li>
+              <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqGroup') }}</a></li>
               <li><a href="https://github.com/LuminolMC">Github</a></li>
               <li><a href="https://discord.gg/Qd7m3V6eDx">Discord</a></li>
               <li><a href="https://t.me/LuminolMinecraft">Telegram</a></li>
