@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainPage from './pages/MainPage.vue'
 import DownloadPage from './pages/DownloadPage.vue'
-import TeamPage from "./pages/TeamPage.vue";
+import TeamPage from './pages/TeamPage.vue'
+import DownloadManagerPage from './pages/DownloadManagerPage.vue'
 
 const routes = [
   {
@@ -30,7 +31,17 @@ const routes = [
       title: '团队 | LuminolMC',
       description: '认识LuminolMC团队，了解我们如何通过更快、更安全的软件改善Minecraft游戏生态系统'
     }
-  }]
+  },
+  {
+    path: '/build-viewer',
+    name: 'BuildViewer',
+    component: DownloadManagerPage,
+    meta: {
+      title: '构建历史 | LuminolMC',
+      description: '查看LuminolMC项目的构建历史记录'
+    }
+  }
+]
 
 const router = createRouter({
   history: createWebHistory(),

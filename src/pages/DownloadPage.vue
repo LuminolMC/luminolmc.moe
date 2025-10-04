@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { formatReleaseDate } from '../utils/dateUtils.ts'
 import {
   NLayout,
   NLayoutContent,
@@ -12,6 +14,7 @@ import {
 } from 'naive-ui'
 
 const { t } = useI18n()
+const router = useRouter() // 初始化路由
 
 interface Release {
   name: string
@@ -70,37 +73,11 @@ const getGradleCommand = () => {
   return './gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar'
 }
 
-// 使用 Intl.DateTimeFormat API 格式化发布时间为UTC时间包含时分秒(CN使用UTC+8)
-const formatReleaseDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const isChinese = useI18n().locale.value === 'zh';
 
-  if (isChinese) {
-    // CN使用UTC+8
-    return new Intl.DateTimeFormat('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'Asia/Shanghai',
-      timeZoneName: 'short'
-    }).format(date);
-  } else {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'UTC',
-      timeZoneName: 'short'
-    }).format(date);
-  }
+// 新增：打开构建查看器页面
+const openBuildViewer = () => {
+  router.push('/build-viewer')
 }
-
 
 const fetchReleases = async () => {
   try {
@@ -189,7 +166,12 @@ onMounted(() => {
 
         <h1 style="font-size: 3rem; margin-bottom: 20px;">{{ t('message.downloadTitle', [getProjectName()]) }}</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.downloadDesc', [getProjectName()]) }}</p>
+
+        <!-- 构建查看器 -->
         <NButton type="primary" size="large" style="margin-right: 12px;" @click="openGithub">{{ t('message.github_upper_case') }}</NButton>
+        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openBuildViewer">
+          {{ t('message.buildViewer') }}
+        </NButton>
         <p style="font-size: 1.2rem;">{{ t('message.downloadNotice', [getProjectName()]) }}</p>
       </div>
 
