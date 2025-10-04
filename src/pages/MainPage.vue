@@ -9,9 +9,11 @@ import {
   NButton,
   NCard,
 } from 'naive-ui'
+import {useRouter} from "vue-router";
 
 type TimeValuePair = [number, number]
 type TimeSeriesData = TimeValuePair[];
+const router = useRouter() // 初始化路由
 const isLoading = ref(true);
 const error = ref<string | null>(null)
 const sum = ref<number>(0)
@@ -65,24 +67,39 @@ const softwareItems = computed(() => {
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;">
       <!-- Hero -->
       <div style="text-align: center; padding: 200px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
-          <!-- <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;">
-            <NButton @click="changeLanguage('en')" :type="currentLocale === 'en' ? 'primary' : 'default'" size="small">English</NButton>
-            <NButton @click="changeLanguage('zh')" :type="currentLocale === 'zh' ? 'primary' : 'default'" size="small">中文</NButton>
-          </div> -->
         <h1 style="font-size: 4rem; margin-bottom: 20px;">Luminol</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.welcome') }}</p>
         <div style="display: inline-flex; align-items: center;">
-          <NButton type="primary" size="large" style="margin-right: 12px;">{{ t('message.startUsing') }}</NButton>
-          <NButton strong secondary size="large" style="margin-right: 12px;">{{ t('message.learnMore') }}</NButton>
-          <NButton type="info" strong secondary size="large" style="color: black; margin-right: 0;" @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
+          <!-- 添加了开始使用按钮的跳转功能 -->
+          <NButton
+            type="primary"
+            size="large"
+            style="margin-right: 12px;"
+            @click="router.push('/download')">
+            {{ t('message.startUsing') }}
+          </NButton>
+          <!-- 添加了了解更多按钮的跳转功能 -->
+          <NButton
+            strong secondary
+            size="large"
+            style="margin-right: 12px;"
+            @click="goTo('https://github.com/LuminolMC/Luminol')">
+            {{ t('message.learnMore') }}
+          </NButton>
+          <NButton
+            type="info"
+            strong secondary
+            size="large"
+            style="color: black; margin-right: 0;"
+            @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
             {{ t('message.deployOnRainyun') }}&nbsp<img src="../assets/rainyun.svg" alt="rainyun" height="20px"/>
           </NButton>
         </div>
 
         <div style="font-size: 1.1rem">
-          <p v-if="!isLoading && !error">{{ $t('message.servingPlayers', { count: sum }) }}</p>
-          <p v-else-if="isLoading">{{ $t('message.loadingPlayers') }}</p>
-          <p v-else class="error">{{ $t('message.' + error) }}</p>
+          <p v-if="!isLoading && !error">{{ t('message.servingPlayers', { count: sum }) }}</p>
+          <p v-else-if="isLoading">{{ t('message.loadingPlayers') }}</p>
+          <p v-else class="error">{{ t('message.' + error) }}</p>
         </div>
       </div>
 
@@ -94,7 +111,6 @@ const softwareItems = computed(() => {
           </NCard>
         </div>
       </div>
-
 
       <!-- Features -->
       <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.coreFeatures') }}</h2>
@@ -130,7 +146,6 @@ const softwareItems = computed(() => {
 
 .software-card {
   flex: 1 1 280px;
-
   transition: transform 0.3s;
 }
 

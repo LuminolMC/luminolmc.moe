@@ -5,11 +5,27 @@ import router from './router'
 import i18n from './i18n'
 import { createPinia } from 'pinia'
 import persistedstate from 'pinia-plugin-persistedstate'
+// 添加 Naive UI 导入
+import {
+  NLayout,
+  NLayoutHeader,
+  NLayoutContent,
+  NLayoutFooter,
+  NLayoutSider
+} from 'naive-ui'
 
 const pinia = createPinia()
 pinia.use(persistedstate)
 
 const vueApp = createApp(App)
+
+// 注册 Naive UI 组件
+vueApp.component('NLayout', NLayout)
+vueApp.component('NLayoutHeader', NLayoutHeader)
+vueApp.component('NLayoutContent', NLayoutContent)
+vueApp.component('NLayoutFooter', NLayoutFooter)
+vueApp.component('NLayoutSider', NLayoutSider)
+
 vueApp.use(router)
 vueApp.use(pinia)
 vueApp.use(i18n)

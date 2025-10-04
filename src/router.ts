@@ -37,7 +37,7 @@ const routes = [
     name: 'BuildViewer',
     component: DownloadManagerPage,
     meta: {
-      title: '构建历史 | LuminolMC',
+      title: '构建查看器 | LuminolMC',
       description: '查看LuminolMC项目的构建历史记录'
     }
   }

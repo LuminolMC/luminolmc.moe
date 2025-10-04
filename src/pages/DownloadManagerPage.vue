@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NLayout,
@@ -17,7 +17,7 @@ import {
 } from 'naive-ui'
 import { formatReleaseDate } from '../utils/dateUtils.ts'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 interface BuildRecord {
   id: number
@@ -31,6 +31,10 @@ interface BuildRecord {
   commitHash: string
   branch: string
   triggerBy: string
+  commitMessage: string
+  downloadUrl?: string
+  downloadCount?: number
+  fromCache?: boolean
 }
 
 const builds = ref<BuildRecord[]>([])
@@ -39,10 +43,35 @@ const error = ref<string | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalBuilds = ref(0)
+const jumpPageInput = ref<string>('') // 添加跳转页码输入框的响应式变量
+
+// 计算总页数
+const totalPages = computed(() => Math.ceil(totalBuilds.value / pageSize.value))
+
+// 列宽调整相关
+const resizingColumnInfo = ref<{
+  leftColumn: HTMLElement | null,
+  rightColumn: HTMLElement | null,
+  startX: number,
+  leftStartWidth: number,
+  rightStartWidth: number,
+  tableWidth: number
+}>({
+  leftColumn: null,
+  rightColumn: null,
+  startX: 0,
+  leftStartWidth: 0,
+  rightStartWidth: 0,
+  tableWidth: 0
+})
 
 // 缓存相关
 const CACHE_KEY = 'github_releases_cache'
 const CACHE_DURATION = 15 * 60 * 1000 // 15分钟
+const BACKUP_CACHE_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun//github_releases.json'
+const BACKUP_CACHE_OLD_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun/github_releases.old.json'
+const COOLDOWN_DURATION = 5 * 60 * 1000 // 5分钟冷却期
+let lastErrorTime = 0 // 上次错误时间
 
 // 筛选条件
 const filterProject = ref<string | null>(null)
@@ -70,8 +99,17 @@ const statusOptions = [
   { label: t('message.buildStatus.building'), value: 'building' }
 ]
 
+// 根据仓库名获取项目名
+const getProjectNameByRepo = (repo: string) => {
+  console.log('[getProjectNameByRepo] Looking up project name for repo:', repo)
+  return Object.keys(repositoryMap).find(
+    key => repositoryMap[key].toLowerCase() === repo.toLowerCase()
+  ) || repo.split('/')[1]
+}
+
 // 检查缓存是否有效
 const isCacheValid = (cachedData: any) => {
+  console.log('[isCacheValid] Checking cache validity')
   if (!cachedData) return false
   const now = Date.now()
   return (now - cachedData.timestamp) < CACHE_DURATION
@@ -79,153 +117,464 @@ const isCacheValid = (cachedData: any) => {
 
 // 从缓存获取数据
 const getCachedData = () => {
+  console.log('[getCachedData] Attempting to retrieve data from cache')
   try {
     const cached = localStorage.getItem(CACHE_KEY)
     if (cached) {
       const parsed = JSON.parse(cached)
       if (isCacheValid(parsed)) {
+        console.log('[getCachedData] Returning valid cached data')
         return parsed.data
       } else {
         // 缓存过期，清除缓存
+        console.log('[getCachedData] Cache expired, removing cache')
         localStorage.removeItem(CACHE_KEY)
       }
     }
   } catch (e) {
-    console.error('Failed to read cache:', e)
+    console.error('[getCachedData] Failed to read cache:', e)
   }
   return null
 }
 
 // 保存数据到缓存
 const saveToCache = (data: any) => {
+  console.log('[saveToCache] Saving data to cache, data length:', data?.length || 0)
   try {
     const cacheData = {
       timestamp: Date.now(),
       data: data
     }
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
+    console.log('[saveToCache] Data successfully saved to cache')
   } catch (e) {
-    console.error('Failed to save cache:', e)
+    console.error('[saveToCache] Failed to save cache:', e)
   }
+}
+
+// 检查是否在冷却期内
+const isInCooldown = () => {
+  const now = Date.now()
+  return (now - lastErrorTime) < COOLDOWN_DURATION
+}
+
+// 使用缓存数据的统一方法
+const useCacheData = (page: number = 1) => {
+  console.log('[useCacheData] Attempting to use cached data for page:', page)
+  const cachedData = getCachedData()
+  if (cachedData) {
+    processData(cachedData, page, 'cache')
+    error.value = t('message.usingCachedDataDueToError')
+    console.log('[useCacheData] Successfully used cached data')
+    return true
+  }
+  console.log('[useCacheData] No cached data available')
+  return false
+}
+
+// 从发行版正文中提取提交信息的第一行
+const extractCommitMessage = (body: string): string => {
+  console.log('[extractCommitMessage] Extracting commit message from body')
+  if (!body) return ''
+
+  // 查找提交信息部分，格式为 "Commit Message\n> 提交信息内容"
+  const commitMessageMatch = body.match(/### Commit Message\n> (.+)/)
+  if (commitMessageMatch && commitMessageMatch[1]) {
+    console.log('[extractCommitMessage] Found commit message:', commitMessageMatch[1])
+    return commitMessageMatch[1]
+  }
+
+  console.log('[extractCommitMessage] No commit message found in body')
+  return ''
 }
 
 // 获取GitHub releases数据
 const fetchGitHubReleases = async (page: number = 1) => {
+  console.log('[fetchGitHubReleases] Starting to fetch GitHub releases for page:', page)
   try {
     loading.value = true
     error.value = null
 
-    // 检查是否有有效缓存
-    const cachedData = getCachedData()
-    if (cachedData && page === 1 &&
-        !filterProject.value &&
-        !filterStatus.value &&
-        !searchKeyword.value) {
-      // 使用缓存数据
-      processData(cachedData, page)
-      return
+    // 检查是否在冷却期内
+    if (isInCooldown()) {
+      console.log('[fetchGitHubReleases] In cooldown period')
+      // 在冷却期内，直接使用缓存数据
+      if (useCacheData(page)) {
+        loading.value = false
+        console.log('[fetchGitHubReleases] Using cached data due to cooldown.')
+        return
+      }
     }
+
+    // 优先尝试从GitHub API获取实时数据
+    console.log('[fetchGitHubReleases] Attempting to fetch from GitHub API directly')
 
     // 根据筛选条件确定要查询的仓库
     let reposToQuery: string[] = []
     if (filterProject.value && repositoryMap[filterProject.value]) {
       reposToQuery = [repositoryMap[filterProject.value]]
+      console.log('[fetchGitHubReleases] Filtering by project:', filterProject.value)
     } else {
       reposToQuery = Object.values(repositoryMap)
+      console.log('[fetchGitHubReleases] Fetching data for all projects')
     }
 
     // 获取所有仓库的发布信息
     let allBuildRecords: BuildRecord[] = []
 
     for (const repo of reposToQuery) {
+      console.log('[fetchGitHubReleases] Fetching releases for repo:', repo)
       // 获取项目名
       const projectName = Object.keys(repositoryMap).find(
         key => repositoryMap[key] === repo
       ) || repo.split('/')[1]
+      console.log('[fetchGitHubReleases] Project name for repo:', projectName)
 
       // 分页获取所有发布（GitHub API每页最多100条）
-      let page = 1
+      let apiPage = 1
       let hasMore = true
-      let totalFetched = 0
 
       while (hasMore) {
+        console.log('[fetchGitHubReleases] Fetching page', apiPage, 'for repo:', repo)
         const response = await fetch(
-          `https://api.github.com/repos/${repo}/releases?per_page=100&page=${page}`
+          `https://api.github.com/repos/${repo}/releases?per_page=100&page=${apiPage}`
         )
+        console.log('[fetchGitHubReleases] GitHub API response status:', response.status)
 
+        if (response.status != 200) {
+          lastErrorTime = Date.now()
+          console.log('[fetchGitHubReleases] GitHub API request failed, setting error time')
+          // GitHub API限制，尝试使用备用缓存
+          break;
+        }
+
+        // 检查其他HTTP错误
         if (!response.ok) {
-          throw new Error(`GitHub API request failed with status ${response.status}`)
+          console.log('[fetchGitHubReleases] GitHub API request not OK')
+          break;
         }
 
         const releases = await response.json()
+        console.log('[fetchGitHubReleases] GitHub API Response for', repo, 'page', apiPage, ':', releases?.length || 0, 'items')
 
-        // 转换为BuildRecord格式
-        const buildRecords: BuildRecord[] = releases.map((release: any) => ({
-          id: release.id,
-          projectName: projectName,
-          version: release.tag_name,
-          buildNumber: release.id,
-          status: release.prerelease ? 'building' : 'success',
-          startTime: release.published_at,
-          endTime: release.published_at,
-          duration: 0,
-          commitHash: release.target_commitish.substring(0, 8),
-          branch: release.target_commitish,
-          triggerBy: release.author?.login || 'Unknown'
-        }))
+        try {
+          // 验证返回数据格式
+          if (!Array.isArray(releases)) {
+            throw new Error('Invalid GitHub API response format')
+          }
 
-        allBuildRecords = [...allBuildRecords, ...buildRecords]
-        totalFetched += releases.length
+          // 转换为BuildRecord格式
+          const buildRecords: BuildRecord[] = releases.map((release: any) => {
+            // 数据验证
+            if (!release.id || !release.tag_name) {
+              throw new Error('Invalid release data in GitHub API response')
+            }
+
+            // 从tag_name提取提交哈希
+            const tagParts = release.tag_name.split('-')
+            const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : ''
+
+            // 从assets中提取下载信息 - 改进的逻辑
+            let downloadUrl = ''
+            let downloadCount = 0
+
+            if (release.assets && release.assets.length > 0) {
+              // 查找有效的下载资产（排除源代码压缩包）
+              const downloadAsset = release.assets.find((asset: any) =>
+                asset.browser_download_url &&
+                !asset.browser_download_url.includes('/source.') &&
+                (asset.content_type.includes('application/') || asset.name.endsWith('.jar'))
+              ) || release.assets[0];
+
+              if (downloadAsset) {
+                downloadUrl = downloadAsset.browser_download_url || ''
+                downloadCount = downloadAsset.download_count || 0
+              }
+            }
+
+            return {
+              id: release.id,
+              projectName: projectName,
+              version: release.tag_name,
+              buildNumber: release.id,
+              status: release.prerelease ? 'building' : 'success',
+              startTime: release.published_at,
+              endTime: release.published_at,
+              duration: 0,
+              commitHash: commitHash,
+              branch: release.target_commitish || 'main',
+              triggerBy: release.author?.login || 'Unknown',
+              commitMessage: '', // GitHub API不直接提供提交信息，需要额外请求
+              downloadUrl: downloadUrl,
+              downloadCount: downloadCount,
+              fromCache: false // 实时数据标记为非缓存
+            }
+          })
+
+          console.log('[fetchGitHubReleases] Processed', buildRecords.length, 'records for repo:', repo)
+          allBuildRecords = [...allBuildRecords, ...buildRecords]
+        } catch (dataError) {
+          console.error('[fetchGitHubReleases] Data validation failed:', dataError)
+          // 数据异常时跳出循环
+          break;
+        }
 
         // 如果返回结果少于100条，说明已经到最后一页
         if (releases.length < 100) {
+          console.log('[fetchGitHubReleases] Reached last page for repo:', repo)
           hasMore = false
         } else {
-          page++
+          console.log('[fetchGitHubReleases] More pages available for repo:', repo)
+          apiPage++
         }
       }
     }
 
-    // 保存到缓存（仅在获取完整数据时缓存）
-    if (!filterProject.value && !filterStatus.value && !searchKeyword.value) {
-      saveToCache(allBuildRecords)
+    // 如果成功获取到GitHub数据
+    if (allBuildRecords.length > 0) {
+      console.log('[fetchGitHubReleases] Total records from GitHub API:', allBuildRecords.length)
+      // 保存到缓存（仅在获取完整数据时缓存）
+      if (!filterProject.value && !filterStatus.value && !searchKeyword.value) {
+        console.log('[fetchGitHubReleases] Saving GitHub API data to cache')
+        saveToCache(allBuildRecords)
+      }
+
+      // 处理数据
+      processData(allBuildRecords, page, 'github-api')
+      jumpPageInput.value = page.toString() // 同步更新跳转页码输入框
+      console.log('[fetchGitHubReleases] Completed fetching GitHub releases')
+      loading.value = false
+      return
     }
 
-    // 处理数据
-    processData(allBuildRecords, page)
+    // 如果GitHub API获取失败，尝试检查是否有有效缓存
+    const cachedData = getCachedData()
+    if (cachedData && page === 1 &&
+        !filterProject.value &&
+        !filterStatus.value &&
+        !searchKeyword.value) {
+      console.log('[fetchGitHubReleases] Using cached data without filters')
+      // 使用缓存数据，即使可能未更新
+      processData(cachedData, page, 'cache')
+      loading.value = false
+      console.log('[fetchGitHubReleases] Using cached data.')
+      return
+    }
+
+    // 尝试从备用缓存获取数据
+    let backupData = null
+    try {
+      console.log('[fetchGitHubReleases] Attempting to fetch from backup cache:', BACKUP_CACHE_URL)
+      const backupResponse = await fetch(BACKUP_CACHE_URL)
+      console.log('[fetchGitHubReleases] Backup cache response status:', backupResponse.status)
+      if (backupResponse.ok) {
+        backupData = await backupResponse.json()
+        console.log('[fetchGitHubReleases] Successfully fetched backup data, items:', backupData?.length || 0)
+      } else {
+        console.log('[fetchGitHubReleases] Backup cache request failed, status:', backupResponse.status)
+        // 备用缓存获取失败时使用本地缓存
+        if (useCacheData(page)) {
+          loading.value = false
+          console.log('[fetchGitHubReleases] Using cached data due to backup cache.')
+          return
+        }
+      }
+    } catch (e) {
+      console.warn('[fetchGitHubReleases] Primary backup cache unavailable, trying old backup:', e)
+      try {
+        const oldBackupResponse = await fetch(BACKUP_CACHE_OLD_URL)
+        console.log('[fetchGitHubReleases] Old backup cache response status:', oldBackupResponse.status)
+        if (oldBackupResponse.ok) {
+          backupData = await oldBackupResponse.json()
+          console.log('[fetchGitHubReleases] Successfully fetched old backup data, items:', backupData?.length || 0)
+        } else {
+          console.log('[fetchGitHubReleases] Old backup cache request failed, status:', oldBackupResponse.status)
+          // 旧备用缓存也获取失败时使用本地缓存
+          if (useCacheData(page)) {
+            loading.value = false
+            console.log('[fetchGitHubReleases] Using cached data due to old backup cache.')
+            return
+          }
+        }
+      } catch (oldError) {
+        console.warn('[fetchGitHubReleases] Old backup cache also unavailable:', oldError)
+        // 所有备用方案都失败时使用本地缓存
+        if (useCacheData(page)) {
+          loading.value = false
+          console.log('[fetchGitHubReleases] Using cached data due to all backup cache.')
+          return
+        }
+      }
+    }
+
+    if (backupData) {
+      console.log('[fetchGitHubReleases] Processing backup data')
+      try {
+        // 验证数据格式
+        if (!Array.isArray(backupData)) {
+          throw new Error('Invalid backup data format')
+        }
+
+        const allBuildRecords: BuildRecord[] = backupData.map((item: any) => {
+          // 数据验证和默认值处理
+          if (!item.source_repo || !item.tag_name) {
+            throw new Error('Invalid item data in backup')
+          }
+
+          // 从source_repo提取项目名
+          const projectName = getProjectNameByRepo(item.source_repo)
+
+          // 从tag_name提取版本信息和commit hash
+          const tagParts = item.tag_name.split('-')
+          const version = item.tag_name
+          // 提取提交哈希 (如: 1.21.8-cba8cbd -> cba8cbd)
+          const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : ''
+
+          // 从body中提取分支信息
+          let branch = 'main'
+          const branchMatch = item.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/)
+          if (branchMatch && branchMatch[1]) {
+            branch = branchMatch[1]
+          }
+
+          // 从body中提取触发者信息
+          let triggerBy = 'Unknown'
+          if (item.body?.includes('automatically compiled by GitHub Actions')) {
+            triggerBy = 'GitHub Actions'
+          }
+
+          // 从body中提取提交信息
+          const commitMessage = extractCommitMessage(item.body)
+
+          // 从assets中提取下载信息
+          let downloadUrl = ''
+          let downloadCount = 0
+
+          if (item.assets && item.assets.length > 0) {
+            const asset = item.assets[0] // 使用第一个资产作为下载链接
+            downloadUrl = asset.download_url || ''
+            downloadCount = asset.download_count || 0
+          }
+
+          // 根据备份数据中的状态字段设置状态，如果没有则根据tag名称判断
+          let status: 'success' | 'failed' | 'building' = 'success'
+          if (item.status) {
+            status = item.status
+          } else if (item.prerelease !== undefined) {
+            status = item.prerelease ? 'building' : 'success'
+          } else {
+            // 根据tag名称判断是否为预发布版本
+            const lowerTagName = item.tag_name.toLowerCase()
+            if (lowerTagName.includes('beta') ||
+                lowerTagName.includes('alpha') ||
+                lowerTagName.includes('rc') ||
+                lowerTagName.includes('snapshot') ||
+                lowerTagName.includes('dev')) {
+              status = 'building'
+            }
+          }
+
+          return {
+            id: item.id || Math.floor(Math.random() * 1000000),
+            projectName: projectName,
+            version: version,
+            buildNumber: item.id || Math.floor(Math.random() * 1000000),
+            status: status,
+            startTime: item.published_at || new Date().toISOString(),
+            endTime: item.published_at || new Date().toISOString(),
+            duration: item.duration || 0,
+            commitHash: commitHash,
+            branch: branch,
+            triggerBy: triggerBy,
+            commitMessage: commitMessage,
+            downloadUrl: downloadUrl,
+            downloadCount: downloadCount,
+            fromCache: true // 备份数据标记为来自缓存
+          }
+        })
+
+        console.log('[fetchGitHubReleases] Processed backup data, total records:', allBuildRecords.length)
+
+        // 保存到本地缓存
+        if (!filterProject.value && !filterStatus.value && !searchKeyword.value) {
+          console.log('[fetchGitHubReleases] Saving backup data to cache')
+          saveToCache(allBuildRecords)
+        }
+
+        processData(allBuildRecords, page, 'backup')
+        loading.value = false
+        console.log('[fetchGitHubReleases] Successfully processed backup data')
+        return
+      } catch (dataError) {
+        console.error('[fetchGitHubReleases] Backup data validation failed:', dataError)
+        // 数据异常时使用缓存
+        if (useCacheData(page)) {
+          loading.value = false
+          console.log('[fetchGitHubReleases] Using cached data due to backup data validation failure')
+          return
+        }
+      }
+    }
+
+    // 如果所有方法都失败，尝试使用缓存数据
+    if (useCacheData(page)) {
+      loading.value = false
+      console.log('[fetchGitHubReleases] Using cached data as final fallback')
+      return
+    }
+
   } catch (err) {
-    console.error('Failed to fetch GitHub releases:', err)
-    error.value = err instanceof Error ? err.message : t('message.fetchBuildRecordsError')
+    console.error('[fetchGitHubReleases] Failed to fetch GitHub releases:', err)
+    // 遇到任何错误都尝试使用缓存数据，不再设置错误信息
+    useCacheData(1)
   } finally {
     loading.value = false
+    console.log('[fetchGitHubReleases] Finished fetch process, loading:', loading.value)
   }
 }
 
 // 处理数据（包括过滤和分页）
-const processData = (allBuildRecords: BuildRecord[], page: number) => {
-  // 应用搜索关键词过滤
-  if (searchKeyword.value) {
-    allBuildRecords = allBuildRecords.filter(record =>
-      record.version.includes(searchKeyword.value) ||
-      record.projectName.includes(searchKeyword.value) ||
-      record.branch.includes(searchKeyword.value)
-    )
+const processData = (allBuildRecords: BuildRecord[], page: number, source: string) => {
+  console.log(`[processData] Starting to process data from ${source}, total records:`, allBuildRecords.length, 'page:', page)
+  try {
+    // 应用搜索关键词过滤
+    if (searchKeyword.value) {
+      console.log('[processData] Applying search filter:', searchKeyword.value)
+      allBuildRecords = allBuildRecords.filter(record =>
+        record.version.includes(searchKeyword.value) ||
+        record.projectName.includes(searchKeyword.value) ||
+        record.branch.includes(searchKeyword.value) ||
+        record.commitHash.includes(searchKeyword.value) ||
+        record.commitMessage.includes(searchKeyword.value)
+      )
+      console.log('[processData] Records after search filter:', allBuildRecords.length)
+    }
+
+    // 应用状态过滤
+    if (filterStatus.value) {
+      console.log('[processData] Applying status filter:', filterStatus.value)
+      allBuildRecords = allBuildRecords.filter(record =>
+        record.status === filterStatus.value
+      )
+      console.log('[processData] Records after status filter:', allBuildRecords.length)
+    }
+
+    totalBuilds.value = allBuildRecords.length
+    console.log('[processData] Total builds after filtering:', totalBuilds.value)
+
+    // 分页处理
+    const startIndex = (page - 1) * pageSize.value
+    const endIndex = page * pageSize.value
+    builds.value = allBuildRecords.slice(startIndex, endIndex)
+    console.log('[processData] Paginated builds, start:', startIndex, 'end:', endIndex, 'result count:', builds.value.length)
+
+    // 输出数据来源信息
+    if (builds.value.length > 0) {
+      console.log('[processData] Data source for current page:', source)
+    }
+  } catch (e) {
+    console.error('[processData] Error processing data:', e)
   }
-
-  // 应用状态过滤
-  if (filterStatus.value) {
-    allBuildRecords = allBuildRecords.filter(record =>
-      record.status === filterStatus.value
-    )
-  }
-
-  totalBuilds.value = allBuildRecords.length
-
-  // 分页处理
-  builds.value = allBuildRecords.slice(
-    (page - 1) * pageSize.value,
-    page * pageSize.value
-  )
 }
 
 const getStatusType = (status: string) => {
@@ -246,68 +595,296 @@ const getStatusText = (status: string) => {
   }
 }
 
-const formatDuration = (seconds: number) => {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-
-  if (h > 0) return `${h}${t('message.time.hour')}${m}${t('message.time.minute')}${s}${t('message.time.second')}`
-  if (m > 0) return `${m}${t('message.time.minute')}${s}${t('message.time.second')}`
-  return `${s}${t('message.time.second')}`
-}
-
 // 分割版本号的函数
 const getVersionPrefix = (version: string) => {
+  // 版本号和提交哈希通过"-"分隔
   const parts = version.split('-')
   return parts[0] || ''
 }
 
 // 获取版本号后缀的函数
 const getVersionSuffix = (version: string) => {
+  // 获取除了第一个部分外的所有内容
   const parts = version.split('-')
   return parts.slice(1).join('-') || ''
 }
 
+// 添加新的时间格式化函数，用于将时间分三行显示（根据语言环境决定时区）
+const formatReleaseDateTimeLines = (dateString: string) => {
+  if (!dateString) return { date: '', time: '', timezone: '' }
+
+  try {
+    // 处理 ISO 8601 格式的时间字符串
+    const date = new Date(dateString)
+
+    // 如果是有效的日期
+    if (!isNaN(date.getTime())) {
+      // 根据语言环境决定使用哪个时区
+      let targetDate;
+      let timezoneLabel;
+
+      if (locale.value === 'en') {
+        // 英文环境显示UTC时间
+        targetDate = date;
+        timezoneLabel = 'UTC';
+      } else {
+        // 中文环境显示UTC+8时间
+        targetDate = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+        timezoneLabel = 'UTC+8';
+      }
+
+      const year = targetDate.getUTCFullYear()
+      const month = String(targetDate.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(targetDate.getUTCDate()).padStart(2, '0')
+
+      const hours = String(targetDate.getUTCHours()).padStart(2, '0')
+      const minutes = String(targetDate.getUTCMinutes()).padStart(2, '0')
+      const seconds = String(targetDate.getUTCSeconds()).padStart(2, '0')
+
+      return {
+        date: `${year}-${month}-${day}`,
+        time: `${hours}:${minutes}:${seconds}`,
+        timezone: timezoneLabel
+      }
+    }
+
+    // 如果日期解析失败，尝试手动分割字符串
+    const parts = dateString.split('T')
+    if (parts.length < 2) {
+      return { date: dateString, time: '', timezone: '' }
+    }
+
+    const datePart = parts[0]
+    const timeAndTimezone = parts[1]
+
+    // 分离时间和时区
+    let timePart = ''
+    let timezonePart = ''
+
+    if (timeAndTimezone.includes('Z')) {
+      [timePart] = timeAndTimezone.split('Z')
+      // 根据语言环境决定如何转换时区
+      if (timePart) {
+        const [hours, minutes, seconds] = timePart.split(':').map(Number)
+        let totalSeconds = hours * 3600 + minutes * 60 + (seconds || 0);
+
+        // 只有在中文环境下才加8小时
+        if (locale.value !== 'en') {
+          totalSeconds += 8 * 3600;
+        }
+
+        const newHours = Math.floor(totalSeconds / 3600) % 24
+        const newMinutes = Math.floor((totalSeconds % 3600) / 60)
+        const newSeconds = totalSeconds % 60
+        timePart = `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}:${String(newSeconds).padStart(2, '0')}`
+      }
+      timezonePart = locale.value === 'en' ? 'UTC' : 'UTC+8'
+    } else if (timeAndTimezone.includes('+') || timeAndTimezone.includes('-')) {
+      const regex = /([+-]\d{2}:\d{2})/
+      const match = timeAndTimezone.match(regex)
+      if (match) {
+        timePart = timeAndTimezone.substring(0, match.index)
+        // 根据语言环境决定时区标签
+        timezonePart = locale.value === 'en' ? 'UTC' : 'UTC+8'
+
+        // 根据语言环境调整时间
+        if (timePart) {
+          const [hours, minutes, seconds] = timePart.split(':').map(Number)
+          let totalSeconds = hours * 3600 + minutes * 60 + (seconds || 0);
+
+          // 只有在中文环境下才调整为UTC+8
+          if (locale.value !== 'en') {
+            totalSeconds += 8 * 3600;
+          }
+
+          const newHours = Math.floor(totalSeconds / 3600) % 24
+          const newMinutes = Math.floor((totalSeconds % 3600) / 60)
+          const newSeconds = totalSeconds % 60
+          timePart = `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}:${String(newSeconds).padStart(2, '0')}`
+        }
+      } else {
+        timePart = timeAndTimezone
+        timezonePart = locale.value === 'en' ? 'UTC' : 'UTC+8'
+      }
+    } else {
+      timePart = timeAndTimezone
+      timezonePart = locale.value === 'en' ? 'UTC' : 'UTC+8'
+    }
+
+    return {
+      date: datePart,
+      time: timePart,
+      timezone: timezonePart
+    }
+  } catch (e) {
+    console.error('Error formatting date:', e)
+    return { date: dateString, time: '', timezone: '' }
+  }
+}
+
+const pageSizeOptions = computed(() => [
+  10, 20, 50, 100, 200, 500, 1000
+].map(size => ({
+  label: t('message.pageSize', { count: size }),
+  value: size
+})))
+
 const handlePageChange = (page: number) => {
+  console.log('[handlePageChange] Page changed to:', page)
   currentPage.value = page
+  jumpPageInput.value = page.toString() // 同步更新跳转页码输入框
   fetchGitHubReleases(page)
 }
 
 // 添加页面大小变更处理函数
 const handlePageSizeChange = (size: number) => {
+  console.log('[handlePageSizeChange] Page size changed to:', size)
   pageSize.value = size
   currentPage.value = 1
+  jumpPageInput.value = '1' // 重置跳转页码输入框
   fetchGitHubReleases()
 }
 
-// 查看详情功能
-const viewBuildDetails = (buildId: number) => {
-  // 实现查看详情逻辑
-  console.log(`查看构建 #${buildId} 的详情`)
+// 查看详情功能 - 跳转到GitHub发行版页面
+const viewBuildDetails = (build: BuildRecord) => {
+  console.log('[viewBuildDetails] Viewing details for build:', build.id)
+  // 根据项目名获取仓库路径
+  const repoPath = repositoryMap[build.projectName] || `LuminolMC/${build.projectName}`;
+  // 构造GitHub发行版页面URL
+  const url = `https://github.com/${repoPath}/releases/tag/${build.version}`;
+  // 在新标签页中打开链接
+  window.open(url, '_blank');
+}
+
+// 下载功能
+const downloadBuild = (build: BuildRecord) => {
+  console.log('[downloadBuild] Downloading build:', build.id)
+  if (build.downloadUrl) {
+    window.open(build.downloadUrl, '_blank');
+  }
 }
 
 // 执行搜索
 const performSearch = () => {
+  console.log('[performSearch] Performing search with keyword:', searchKeyword.value)
   currentPage.value = 1
+  jumpPageInput.value = '1' // 重置跳转页码输入框
   fetchGitHubReleases()
 }
 
 // 重置筛选条件
 const resetFilters = () => {
+  console.log('[resetFilters] Resetting all filters')
   filterProject.value = null
   filterStatus.value = null
   searchKeyword.value = ''
   currentPage.value = 1
+  jumpPageInput.value = '1' // 重置跳转页码输入框
   fetchGitHubReleases()
 }
 
 // 清除缓存函数
 const clearCache = () => {
+  console.log('[clearCache] Clearing cache')
   localStorage.removeItem(CACHE_KEY)
 }
 
+// 添加跳转到指定页的处理函数
+const handleJumpPage = () => {
+  const pageNum = parseInt(jumpPageInput.value)
+  const maxPage = Math.ceil(totalBuilds.value / pageSize.value)
+  console.log('[handleJumpPage] Jumping to page:', pageNum, 'max page:', maxPage)
+
+  if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPage) {
+    currentPage.value = pageNum
+    fetchGitHubReleases(pageNum)
+  } else {
+    // 如果输入的页码无效，重置为当前页码
+    jumpPageInput.value = currentPage.value.toString()
+  }
+}
+
+// 修改开始调整列宽的方法
+const startResizing = (e: MouseEvent, columnIndex: number) => {
+  console.log('[startResizing] Starting column resize for column:', columnIndex)
+  const table = document.querySelector('.build-table')
+  if (!table) return
+
+  // 类型断言为 HTMLElement 数组以访问 offsetWidth 属性
+  const columns = Array.from(table.querySelectorAll('.resizable-column')) as HTMLElement[]
+  if (columnIndex >= columns.length - 1) return // 最后一列不能调整宽度
+
+  resizingColumnInfo.value = {
+    leftColumn: columns[columnIndex],
+    rightColumn: columns[columnIndex + 1],
+    startX: e.clientX,
+    leftStartWidth: columns[columnIndex].offsetWidth,
+    rightStartWidth: columns[columnIndex + 1].offsetWidth,
+    tableWidth: (table as HTMLElement).offsetWidth
+  }
+
+  document.body.style.cursor = 'col-resize'
+  e.preventDefault()
+}
+
+// 修改调整列宽的方法
+const resizeColumn = (e: MouseEvent) => {
+  if (!resizingColumnInfo.value.leftColumn || !resizingColumnInfo.value.rightColumn) return
+
+  const diff = e.clientX - resizingColumnInfo.value.startX
+
+  const newLeftWidth = resizingColumnInfo.value.leftStartWidth + diff
+  const newRightWidth = resizingColumnInfo.value.rightStartWidth - diff
+
+  // 设置最小宽度限制
+  if (newLeftWidth > 100 && newRightWidth > 100) {
+    // 类型断言为 HTMLElement 以访问 style 属性
+    const leftColumn = resizingColumnInfo.value.leftColumn as HTMLElement
+    const rightColumn = resizingColumnInfo.value.rightColumn as HTMLElement
+
+    leftColumn.style.width = `${newLeftWidth}px`
+    rightColumn.style.width = `${newRightWidth}px`
+
+    // 保持表格总宽度不变
+    const table = document.querySelector('.build-table') as HTMLElement | null
+    if (table) {
+      const currentTableWidth = resizingColumnInfo.value.tableWidth
+      const newTableWidth = currentTableWidth + (newLeftWidth + newRightWidth -
+                               (resizingColumnInfo.value.leftStartWidth + resizingColumnInfo.value.rightStartWidth))
+      table.style.width = `${newTableWidth}px`
+    }
+  }
+}
+
+// 修改停止调整的方法
+const stopResizing = () => {
+  console.log('[stopResizing] Stopping column resize')
+  resizingColumnInfo.value = {
+    leftColumn: null,
+    rightColumn: null,
+    startX: 0,
+    leftStartWidth: 0,
+    rightStartWidth: 0,
+    tableWidth: 0
+  }
+  document.body.style.cursor = ''
+}
+
+// 添加事件监听
 onMounted(() => {
+  console.log('[onMounted] Component mounted, starting initial fetch')
   fetchGitHubReleases()
+  jumpPageInput.value = '1' // 初始化跳转页码输入框
+  document.addEventListener('mousemove', resizeColumn)
+  document.addEventListener('mouseup', stopResizing)
+  console.log('[onMounted] Event listeners added')
+})
+
+// 移除事件监听
+onBeforeUnmount(() => {
+  console.log('[onBeforeUnmount] Component unmounting, removing event listeners')
+  document.removeEventListener('mousemove', resizeColumn)
+  document.removeEventListener('mouseup', stopResizing)
 })
 </script>
 
@@ -322,19 +899,19 @@ onMounted(() => {
             :options="projectOptions"
             :placeholder="t('message.selectProject')"
             clearable
-            style="width: 150px;"
+            style="width: 200px;"
           />
           <NSelect
             v-model:value="filterStatus"
             :options="statusOptions"
             :placeholder="t('message.selectStatus')"
             clearable
-            style="width: 150px;"
+            style="width: 200px;"
           />
           <NInput
             v-model:value="searchKeyword"
             :placeholder="t('message.searchKeyword')"
-            style="width: 200px;"
+            style="width: 400px;"
           />
           <NButton @click="performSearch">
             {{ t('message.search') }}
@@ -349,59 +926,49 @@ onMounted(() => {
         </div>
 
         <NSpin :show="loading">
-          <div v-if="error">
+          <div v-if="error && !builds.length">
             <NAlert type="error" :title="t('message.error')" :closable="false">
               {{ error }}
             </NAlert>
           </div>
 
-          <div v-else>
+          <!-- 始终显示内容，即使有错误 -->
+          <div>
             <div class="table-container">
               <NTable :bordered="true" :single-line="false" class="build-table">
                 <thead>
                   <tr>
-                    <th class="resizable-column" style="width: 80px;">
-                      <div class="column-content">ID</div>
-                    </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 0)">
                       <div class="column-content">{{ t('message.project') }}</div>
                     </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 1)">
                       <div class="column-content">{{ t('message.versionPrefix') }}</div>
                     </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 2)">
                       <div class="column-content">{{ t('message.versionSuffix') }}</div>
                     </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 3)">
                       <div class="column-content">{{ t('message.status') }}</div>
                     </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 4)">
                       <div class="column-content">{{ t('message.startTime') }}</div>
                     </th>
-                    <th class="resizable-column">
-                      <div class="column-content">{{ t('message.duration') }}</div>
-                    </th>
-                    <th class="resizable-column">
+                    <th class="resizable-column" @mousedown="startResizing($event, 5)">
                       <div class="column-content">{{ t('message.branch') }}</div>
                     </th>
-                    <th class="resizable-column">
-                      <div class="column-content">{{ t('message.triggerBy') }}</div>
+                    <th class="resizable-column commit-message-column" @mousedown="startResizing($event, 6)">
+                      <div class="column-content">{{ t('message.commitMessage') }}</div>
                     </th>
-                    <th class="resizable-column" style="width: 100px;">
+                    <th class="resizable-column" @mousedown="startResizing($event, 7)">
+                      <div class="column-content">{{ t('message.download') }}</div>
+                    </th>
+                    <th class="resizable-column" style="width: 100px;" @mousedown="startResizing($event, 8)">
                       <div class="column-content">{{ t('message.actions') }}</div>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="build in builds" :key="build.id">
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">#{{ build.id }}</div>
-                        </template>
-                        {{ build.id }}
-                      </NTooltip>
-                    </td>
                     <td>
                       <NTooltip trigger="hover" placement="top">
                         <template #trigger>
@@ -434,17 +1001,13 @@ onMounted(() => {
                     <td>
                       <NTooltip trigger="hover" placement="top">
                         <template #trigger>
-                          <div class="cell-content">{{ formatReleaseDate(build.startTime) }}</div>
+                          <div class="datetime-cell">
+                            <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).date }}</div>
+                            <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).time }}</div>
+                            <div class="datetime-line timezone-line">{{ formatReleaseDateTimeLines(build.startTime).timezone }}</div>
+                          </div>
                         </template>
                         {{ formatReleaseDate(build.startTime) }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">{{ formatDuration(build.duration) }}</div>
-                        </template>
-                        {{ formatDuration(build.duration) }}
                       </NTooltip>
                     </td>
                     <td>
@@ -456,36 +1019,73 @@ onMounted(() => {
                       </NTooltip>
                     </td>
                     <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">{{ build.triggerBy }}</div>
-                        </template>
-                        {{ build.triggerBy }}
-                      </NTooltip>
+                      <div class="commit-message-cell">{{ build.commitMessage }}</div>
                     </td>
                     <td>
-                      <NButton text type="primary" @click="viewBuildDetails(build.id)">
+                      <div v-if="build.downloadUrl" class="download-cell">
+                        <NTooltip trigger="hover" placement="top">
+                          <template #trigger>
+                            <NButton text type="primary" @click="downloadBuild(build)">
+                              {{ t('message.download') }}
+                            </NButton>
+                          </template>
+                          <span :style="{ color: build.fromCache ? 'red' : 'green' }">
+                            {{ build.fromCache ? t('message.dataFromCache') : t('message.realTimeData') }}
+                          </span>
+                        </NTooltip>
+                        <span
+                          :style="{
+                            color: build.fromCache ? 'red' : 'green',
+                            marginLeft: '5px'
+                          }"
+                          :title="build.fromCache ? t('message.dataFromCache') : t('message.realTimeData')"
+                        >
+                          ({{ build.downloadCount }})
+                        </span>
+                      </div>
+                      <div v-else>
+                        {{ t('message.noDownloadAvailable') }}
+                      </div>
+                    </td>
+                    <td>
+                      <NButton text type="primary" @click="viewBuildDetails(build)">
                         {{ t('message.viewDetails') }}
                       </NButton>
                     </td>
                   </tr>
                   <tr v-if="builds.length === 0">
-                    <td colspan="10" style="text-align: center;">{{ t('message.noBuildRecords') }}</td>
+                    <td colspan="9" style="text-align: center;">{{ t('message.noBuildRecords') }}</td>
                   </tr>
                 </tbody>
               </NTable>
             </div>
 
-            <div style="display: flex; justify-content: center; margin-top: 20px;">
+            <div style="display: flex; justify-content: center; margin-top: 20px; align-items: center; gap: 16px;">
               <NPagination
                 v-model:page="currentPage"
                 :page-size="pageSize"
                 :item-count="totalBuilds"
-                :page-sizes="[10, 20, 50, 100]"
+                :page-sizes="pageSizeOptions"
                 show-size-picker
                 @update:page="handlePageChange"
                 @update:page-size="handlePageSizeChange"
               />
+              <!-- 添加页码跳转功能 -->
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>{{ t('message.goToPage') }}</span>
+                <NInput
+                  v-model:value="jumpPageInput"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  :placeholder="t('message.pageNumber')"
+                  style="width: 100px;"
+                  @keyup.enter="handleJumpPage"
+                />
+                <NButton @click="handleJumpPage">
+                  {{ t('message.go') }}
+                </NButton>
+                <span>/ {{ totalPages }} {{ t('message.page') }}</span>
+              </div>
             </div>
           </div>
         </NSpin>
@@ -509,7 +1109,7 @@ onMounted(() => {
 /* 表格样式 */
 .build-table {
   width: 100%;
-  min-width: 800px;
+  min-width: 1000px; /* 增加最小宽度以适应新增列 */
   table-layout: fixed;
   border-collapse: collapse;
 }
@@ -530,6 +1130,7 @@ onMounted(() => {
 .resizable-column {
   position: relative;
   overflow: hidden;
+  user-select: none;
 }
 
 .column-content {
@@ -544,6 +1145,24 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+/* 提交信息单元格样式 - 支持自动换行 */
+.commit-message-cell {
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* 提交列样式 */
+.commit-message-column {
+  min-width: 200px;
+}
+
+/* 下载列样式 */
+.download-cell {
+  display: flex;
+  align-items: center;
+}
+
 /* 可调整列宽的拖拽手柄 */
 .resizable-column::after {
   content: '';
@@ -555,10 +1174,28 @@ onMounted(() => {
   cursor: col-resize;
   background-color: transparent;
   transition: background-color 0.2s;
+  z-index: 1;
 }
 
 .resizable-column:hover::after {
   background-color: #1890ff;
+}
+
+/* 时间显示多行样式 */
+.datetime-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+
+.datetime-line {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.timezone-line {
+  font-size: 0.85em;
+  opacity: 0.7;
 }
 
 /* 响应式设计 */
@@ -573,20 +1210,15 @@ onMounted(() => {
   }
 
   /* 在小屏幕上隐藏部分列 */
+  .build-table th:nth-child(5),
+  .build-table td:nth-child(5),
   .build-table th:nth-child(7),
   .build-table td:nth-child(7) {
     display: none;
   }
-}
 
-/* 工具提示样式优化 */
-:deep(.n-tooltip) {
-  max-width: 300px;
-  word-wrap: break-word;
-}
-
-/* 移除导航栏悬浮效果 */
-:deep(.n-layout-header) {
-  box-shadow: none !important;
+  .build-table {
+    min-width: 800px;
+  }
 }
 </style>
