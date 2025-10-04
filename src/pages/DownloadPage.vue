@@ -26,7 +26,7 @@ interface Release {
 
 const releases = ref<Release[]>([])
 const loading = ref(true)
-const error = ref<string | null>(null)
+const hasError = ref(false)
 const activeProject = ref('luminol')
 
 // 获取稳定版本
@@ -86,13 +86,13 @@ const fetchReleases = async () => {
 
     const response = await fetch(`https://api.github.com/repos/LuminolMC/${projectName}/releases`)
     if (!response.ok) {
-      throw new Error('获取版本信息失败')
+      throw new Error(t('message.fetchVersionInfoError'))
     }
     const data = await response.json()
     releases.value = data
   } catch (err) {
-    error.value = err instanceof Error ? err.message : '未知错误'
-    console.error('获取版本信息失败:', err)
+    hasError.value = true
+    console.error(t('message.fetchVersionInfoError') + ':', err)
   } finally {
     loading.value = false
   }
@@ -108,6 +108,7 @@ const openReleaseUrl = (url: string) => {
 
 const switchProject = (project: string) => {
   activeProject.value = project
+  hasError.value = false
   fetchReleases()
 }
 
@@ -178,9 +179,9 @@ onMounted(() => {
       <!-- 下载选项 -->
       <div style="max-width: 900px; margin: 0 auto; padding: 0 24px;">
         <NSpin :show="loading">
-          <div v-if="error">
+          <div v-if="hasError">
             <NAlert type="error" :title="t('message.error')" :closable="false">
-              {{ error }}
+              {{ t('message.fetchVersionInfoError') }}
             </NAlert>
           </div>
 

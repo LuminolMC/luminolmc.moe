@@ -74,6 +74,48 @@ export default {
       contributions: '次提交',
       loading: '加载中...',
       error: '加载失败'
-    }
+    },
+    // DownloadManagerPage 相关翻译
+    buildViewer: '构建查看器',
+    buildHistory: '构建历史',
+    buildStatus: {
+      success: '成功',
+      failed: '失败',
+      building: '构建中'
+    },
+    time: {
+      hour: '小时',
+      minute: '分钟',
+      second: '秒'
+    },
+    selectProject: '选择项目',
+    selectStatus: '选择状态',
+    searchKeyword: '搜索关键词',
+    search: '搜索',
+    reset: '重置',
+    clearCache: '清除缓存',
+    project: '项目',
+    versionPrefix: '版本前缀',
+    versionSuffix: '版本后缀',
+    status: '状态',
+    startTime: '开始时间',
+    duration: '持续时间',
+    branch: '分支',
+    triggerBy: '触发者',
+    actions: '操作',
+    viewDetails: '查看详情',
+    noBuildRecords: '暂无构建记录',
+    fetchBuildRecordsError: '获取构建记录失败',
+    fetchVersionInfoError: '获取版本信息失败',
+    unknownError: '未知错误',
+    error: '错误',
+    // App.vue 相关翻译
+    luminolCraft: 'LuminolCraft',
+    simplifiedChinese: '简体中文',
+    english: 'English',
+    telegram: 'Telegram',
+    locyanNetwork: 'Locyan Network',
+    rainyun: '雨云',
+    deployOnRainyun: '在雨云上部署'
   }
 }

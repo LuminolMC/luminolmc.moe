@@ -76,7 +76,7 @@ const menuOptions: MenuOption[] = [
             {
               href: 'https://craft.luminolsuki.moe/',
             },
-            'LuminolCraft'
+            t('message.luminolCraft')
         ),
         icon: renderIcon(ExternalLink)
   }
@@ -84,7 +84,7 @@ const menuOptions: MenuOption[] = [
 
 const dropdownOptions: MenuOption[] = [
   {
-    label: '简体中文',
+    label: t('message.simplifiedChinese'),
     props: {
       onClick: () => {        
         changeLanguage('zh')
@@ -92,7 +92,7 @@ const dropdownOptions: MenuOption[] = [
     }
   },
   {
-    label: 'English',
+    label: t('message.english'),
     props: {
       onClick: () => {
         changeLanguage('en')
@@ -135,15 +135,15 @@ const currentRouteName = computed(() => route.name as string)
             <h3>{{ t('message.community') }}</h3>
             <ul>
               <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqGroup') }}</a></li>
-              <li><a href="https://github.com/LuminolMC">Github</a></li>
-              <li><a href="https://discord.gg/Qd7m3V6eDx">Discord</a></li>
-              <li><a href="https://t.me/LuminolMinecraft">Telegram</a></li>
+              <li><a href="https://github.com/LuminolMC">{{ t('message.github_upper_case') }}</a></li>
+              <li><a href="https://discord.gg/Qd7m3V6eDx">{{ t('message.discord') }}</a></li>
+              <li><a href="https://t.me/LuminolMinecraft">{{ t('message.telegram') }}</a></li>
             </ul>
           </div>
           <div class="footer-column">
             <h3>LuminolMC</h3>
             <ul>
-              <li><a href="#">{{ t('message.ourTeam') }}</a></li>
+              <li><RouterLink to="/team">{{ t('message.ourTeam') }}</RouterLink></li>
               <li><a href="#">{{ t('message.contribute') }}</a></li>
               <li><a href="https://afdian.com/a/Luminol">{{ t('message.sponsors') }}</a></li>
             </ul>
@@ -151,8 +151,8 @@ const currentRouteName = computed(() => route.name as string)
           <div class="footer-column">
             <h3>{{ t('message.friendship_links') }}</h3>
             <ul>
-              <li><a href="https://www.locyan.cn/">Locyan Network</a></li>
-              <li><a href="https://www.rainyun.com/">雨云</a></li>
+              <li><a href="https://www.locyan.cn/">{{ t('message.locyanNetwork') }}</a></li>
+              <li><a href="https://www.rainyun.com/">{{ t('message.rainyun') }}</a></li>
             </ul>
           </div>
         </div>

@@ -74,6 +74,48 @@ export default {
       contributions: ' commits',
       loading: 'Loading...',
       error: 'Failed to load'
-    }
+    },
+    // DownloadManagerPage related translations
+    buildViewer: 'Build Viewer',
+    buildHistory: 'Build History',
+    buildStatus: {
+      success: 'Success',
+      failed: 'Failed',
+      building: 'Building'
+    },
+    time: {
+      hour: 'h',
+      minute: 'm',
+      second: 's'
+    },
+    selectProject: 'Select Project',
+    selectStatus: 'Select Status',
+    searchKeyword: 'Search Keyword',
+    search: 'Search',
+    reset: 'Reset',
+    clearCache: 'Clear Cache',
+    project: 'Project',
+    versionPrefix: 'Version Prefix',
+    versionSuffix: 'Version Suffix',
+    status: 'Status',
+    startTime: 'Start Time',
+    duration: 'Duration',
+    branch: 'Branch',
+    triggerBy: 'Triggered By',
+    actions: 'Actions',
+    viewDetails: 'View Details',
+    noBuildRecords: 'No build records',
+    fetchBuildRecordsError: 'Failed to fetch build records',
+    fetchVersionInfoError: 'Failed to fetch version information',
+    unknownError: 'Unknown error',
+    error: 'Error',
+    // App.vue related translations
+    luminolCraft: 'LuminolCraft',
+    simplifiedChinese: '简体中文',
+    english: 'English',
+    telegram: 'Telegram',
+    locyanNetwork: 'Locyan Network',
+    rainyun: '雨云',
+    deployOnRainyun: 'Deploy on Rainyun'
   }
 }
