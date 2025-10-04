@@ -1,12 +1,12 @@
-<script setup lang="ts">
-import { NButton, NH2, NText, NAvatar, NSpin, NAlert } from "naive-ui";
-import { useI18n } from 'vue-i18n'
-import { onMounted, onUnmounted, computed, ref } from 'vue'
-import { useGitHubContributors } from "../services/github";
-import { coreContributors } from "../data/coreContributors";
+<script lang="ts" setup>
+import {NAlert, NAvatar, NButton, NH2, NSpin, NText} from "naive-ui";
+import {useI18n} from 'vue-i18n'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {useGitHubContributors} from "../services/github";
+import {coreContributors} from "../data/coreContributors";
 
-const { t, locale } = useI18n()
-const { contributors, isLoading, error, fetchContributors } = useGitHubContributors()
+const {t, locale} = useI18n()
+const {contributors, isLoading, error, fetchContributors} = useGitHubContributors()
 const goTo = (path: string) => {
   window.open(path, '_blank')
 }
@@ -61,18 +61,18 @@ onUnmounted(() => {
           <h1 class="hero-title">{{ t('message.teamTitle') }}</h1>
           <p class="hero-description">{{ t('message.teamIntroduction') }}</p>
           <div class="hero-buttons">
-            <NButton 
-              type="primary" 
-              size="large" 
-              @click="goTo('https://afdian.com/a/Luminol')"
+            <NButton
+                size="large"
+                type="primary"
+                @click="goTo('https://afdian.com/a/Luminol')"
             >
               {{ t('message.sponsorUs') }}
             </NButton>
-            <NButton 
-              strong 
-              secondary 
-              size="large" 
-              @click="goTo('https://github.com/LuminolMC')"
+            <NButton
+                secondary
+                size="large"
+                strong
+                @click="goTo('https://github.com/LuminolMC')"
             >
               {{ t('message.github_upper_case') }}
             </NButton>
@@ -101,45 +101,46 @@ onUnmounted(() => {
           </NSpin>
         </div>
 
-        <NAlert v-else-if="error" type="error" class="error-alert">
+        <NAlert v-else-if="error" class="error-alert" type="error">
           {{ t('message.team.error') }}: {{ error }}
         </NAlert>
 
-         <div class="contributors-flex">
-           <article 
-             v-for="contributor in manualCoreContributors" 
-             :key="contributor.github"
-             class="contributor-card"
-             @click="goTo(`https://github.com/${contributor.github}`)"
-           >
-             <div class="contributor-layout">
-               <div class="contributor-avatar-container">
-                 <NAvatar
-                   :size="80"
-                   :src="contributor.avatar"
-                   :fallback-src="`https://github.com/${contributor.github}.png`"
-                   class="contributor-avatar"
-                 />
-               </div>
-               <div class="contributor-info">
-                 <div class="contributor-name">{{ contributor.name }}</div>
-                 <div class="contributor-role">{{ getContributorRole(contributor) }}</div>
-                 <a 
-                   :href="`https://github.com/${contributor.github}`"
-                   class="contributor-github-link"
-                   @click.stop
-                   target="_blank"
-                   rel="noreferrer"
-                 >
-                   <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
-                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                   </svg>
-                   {{ contributor.github }}
-                 </a>
-               </div>
-             </div>
-           </article>
-         </div>
+        <div class="contributors-flex">
+          <article
+              v-for="contributor in manualCoreContributors"
+              :key="contributor.github"
+              class="contributor-card"
+              @click="goTo(`https://github.com/${contributor.github}`)"
+          >
+            <div class="contributor-layout">
+              <div class="contributor-avatar-container">
+                <NAvatar
+                    :fallback-src="`https://github.com/${contributor.github}.png`"
+                    :size="80"
+                    :src="contributor.avatar"
+                    class="contributor-avatar"
+                />
+              </div>
+              <div class="contributor-info">
+                <div class="contributor-name">{{ contributor.name }}</div>
+                <div class="contributor-role">{{ getContributorRole(contributor) }}</div>
+                <a
+                    :href="`https://github.com/${contributor.github}`"
+                    class="contributor-github-link"
+                    rel="noreferrer"
+                    target="_blank"
+                    @click.stop
+                >
+                  <svg class="github-icon" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  {{ contributor.github }}
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
 
       <!-- All Contributors Section -->
@@ -159,19 +160,19 @@ onUnmounted(() => {
           </NSpin>
         </div>
 
-         <div v-else-if="allContributors.length > 0" class="minor-contributors-flex">
-           <div 
-             v-for="contributor in allContributors" 
-             :key="contributor.id"
-             class="minor-contributor"
-             @click="goTo(contributor.html_url)"
-             :title="`${contributor.login} - ${contributor.contributions}${t('message.team.contributions')}`"
-           >
+        <div v-else-if="allContributors.length > 0" class="minor-contributors-flex">
+          <div
+              v-for="contributor in allContributors"
+              :key="contributor.id"
+              :title="`${contributor.login} - ${contributor.contributions}${t('message.team.contributions')}`"
+              class="minor-contributor"
+              @click="goTo(contributor.html_url)"
+          >
             <NAvatar
-              :size="avatarSize"
-              :src="contributor.avatar_url"
-              :fallback-src="`https://github.com/${contributor.login}.png`"
-              class="minor-contributor-avatar"
+                :fallback-src="`https://github.com/${contributor.login}.png`"
+                :size="avatarSize"
+                :src="contributor.avatar_url"
+                class="minor-contributor-avatar"
             />
           </div>
         </div>
@@ -261,15 +262,15 @@ onUnmounted(() => {
     max-width: 1400px;
     padding: 5rem 3rem;
   }
-  
+
   .team-section {
     margin-bottom: 5rem;
   }
-  
+
   .section-title {
     font-size: 2.5rem;
   }
-  
+
   .section-description {
     font-size: 1.2rem;
   }
@@ -280,11 +281,11 @@ onUnmounted(() => {
     max-width: 100%;
     padding: 3.5rem 1.5rem;
   }
-  
+
   .team-section {
     margin-bottom: 3.5rem;
   }
-  
+
   .section-title {
     font-size: 1.8rem;
   }
@@ -294,20 +295,20 @@ onUnmounted(() => {
   .team-sections {
     padding: 3rem 1rem;
   }
-  
+
   .team-section {
     margin-bottom: 3rem;
   }
-  
+
   .section-header {
     margin-bottom: 1.5rem;
     text-align: center;
   }
-  
+
   .section-title {
     font-size: 1.6rem;
   }
-  
+
   .section-description {
     font-size: 1rem;
   }
@@ -317,15 +318,15 @@ onUnmounted(() => {
   .team-sections {
     padding: 2rem 0.75rem;
   }
-  
+
   .team-section {
     margin-bottom: 2.5rem;
   }
-  
+
   .section-title {
     font-size: 1.4rem;
   }
-  
+
   .section-description {
     font-size: 0.9rem;
   }
@@ -470,15 +471,15 @@ onUnmounted(() => {
   .contributor-layout {
     gap: 1rem;
   }
-  
+
   .contributor-name {
     font-size: 1rem;
   }
-  
+
   .contributor-role {
     font-size: 0.85rem;
   }
-  
+
   .contributor-github-link {
     font-size: 0.85rem;
   }
@@ -488,19 +489,19 @@ onUnmounted(() => {
   .contributor-card {
     padding: 0.75rem;
   }
-  
+
   .contributor-layout {
     gap: 0.75rem;
   }
-  
+
   .contributor-name {
     font-size: 0.95rem;
   }
-  
+
   .contributor-role {
     font-size: 0.8rem;
   }
-  
+
   .contributor-github-link {
     font-size: 0.8rem;
   }
@@ -540,7 +541,7 @@ onUnmounted(() => {
   .minor-contributors-flex {
     padding: 0.75rem;
   }
-  
+
   .minor-contributors-flex .minor-contributor {
     margin: 4px;
   }
@@ -551,7 +552,7 @@ onUnmounted(() => {
   .minor-contributors-flex {
     padding: 0.5rem;
   }
-  
+
   .minor-contributors-flex .minor-contributor {
     margin: 3px;
   }
@@ -587,23 +588,23 @@ onUnmounted(() => {
     padding: 6rem 1.5rem 4rem;
     text-align: center;
   }
-  
+
   .hero-title {
     font-size: 2.5rem;
   }
-  
+
   .hero-description {
     font-size: 1.1rem;
   }
-  
+
   .hero-buttons {
     justify-content: center;
   }
-  
+
   .team-sections {
     padding: 3rem 1.5rem;
   }
-  
+
   .section-title {
     font-size: 1.75rem;
   }
@@ -613,12 +614,12 @@ onUnmounted(() => {
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .hero-buttons .n-button {
     width: 100%;
     max-width: 200px;

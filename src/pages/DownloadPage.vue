@@ -1,19 +1,11 @@
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { formatReleaseDate } from '../utils/dateUtils.ts'
-import {
-  NLayout,
-  NLayoutContent,
-  NButton,
-  NCard,
-  NCode,
-  NSpin,
-  NAlert
-} from 'naive-ui'
+<script lang="ts" setup>
+import {useI18n} from 'vue-i18n'
+import {computed, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {formatReleaseDate} from '../utils/dateUtils.ts'
+import {NAlert, NButton, NCard, NCode, NLayout, NLayoutContent, NSpin} from 'naive-ui'
 
-const { t } = useI18n()
+const {t} = useI18n()
 const router = useRouter() // 初始化路由
 
 interface Release {
@@ -40,23 +32,23 @@ let lastErrorTime = 0 // 上次错误时间
 // 获取稳定版本
 const getStableReleases = () => {
   return releases.value
-    .filter(release => !release.prerelease)
-    .sort((a, b) => {
-      const dateA = new Date(a.published_at).getTime()
-      const dateB = new Date(b.published_at).getTime()
-      return dateB - dateA
-    })
+      .filter(release => !release.prerelease)
+      .sort((a, b) => {
+        const dateA = new Date(a.published_at).getTime()
+        const dateB = new Date(b.published_at).getTime()
+        return dateB - dateA
+      })
 }
 
 // 获取开发版本
 const getDevReleases = () => {
   return releases.value
-    .filter(release => release.prerelease)
-    .sort((a, b) => {
-      const dateA = new Date(a.published_at).getTime()
-      const dateB = new Date(b.published_at).getTime()
-      return dateB - dateA
-    })
+      .filter(release => release.prerelease)
+      .sort((a, b) => {
+        const dateA = new Date(a.published_at).getTime()
+        const dateB = new Date(b.published_at).getTime()
+        return dateB - dateA
+      })
 }
 
 // 获取项目名称
@@ -148,7 +140,7 @@ const fetchFromBackupCache = async (projectName: string) => {
       const backupData = await backupResponse.json()
       // 过滤出指定项目的发布信息
       const projectData = backupData.filter((item: any) =>
-        item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
+          item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
       )
 
       // 转换为Release格式
@@ -171,7 +163,7 @@ const fetchFromBackupCache = async (projectName: string) => {
         const oldBackupData = await oldBackupResponse.json()
         // 过滤出指定项目的发布信息
         const projectData = oldBackupData.filter((item: any) =>
-          item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
+            item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
         )
 
         // 转换为Release格式
@@ -298,12 +290,13 @@ onMounted(() => {
   <NLayout class="layout">
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;">
       <!-- 下载区域 -->
-      <div style="text-align: center; padding: 150px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
+      <div
+          style="text-align: center; padding: 150px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
         <!-- 二级菜单 -->
-        <div style="position: absolute; top: 20px; left: 0; right: 0; text-align: center; background: transparent; padding: 10px 0; z-index: 10;">
+        <div
+            style="position: absolute; top: 20px; left: 0; right: 0; text-align: center; background: transparent; padding: 10px 0; z-index: 10;">
           <span
-            @click="switchProject('luminol')"
-            :style="{
+              :style="{
               color: activeProject === 'luminol' ? '#4ade80' : 'white',
               fontSize: '1.2rem',
               margin: '0 20px',
@@ -311,12 +304,12 @@ onMounted(() => {
               transition: 'color 0.3s',
               textShadow: '0 0 4px rgba(0,0,0,0.5)'
             }"
+              @click="switchProject('luminol')"
           >
             Luminol
           </span>
           <span
-            @click="switchProject('lophine')"
-            :style="{
+              :style="{
               color: activeProject === 'lophine' ? '#4ade80' : 'white',
               fontSize: '1.2rem',
               margin: '0 20px',
@@ -324,12 +317,12 @@ onMounted(() => {
               transition: 'color 0.3s',
               textShadow: '0 0 4px rgba(0,0,0,0.5)'
             }"
+              @click="switchProject('lophine')"
           >
             Lophine
           </span>
           <span
-            @click="switchProject('lightingluminol')"
-            :style="{
+              :style="{
               color: activeProject === 'lightingluminol' ? '#4ade80' : 'white',
               fontSize: '1.2rem',
               margin: '0 20px',
@@ -337,17 +330,21 @@ onMounted(() => {
               transition: 'color 0.3s',
               textShadow: '0 0 4px rgba(0,0,0,0.5)'
             }"
+              @click="switchProject('lightingluminol')"
           >
             LightingLuminol
           </span>
         </div>
 
         <h1 style="font-size: 3rem; margin-bottom: 20px;">{{ t('message.downloadTitle', [getProjectName()]) }}</h1>
-        <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.downloadDesc', [getProjectName()]) }}</p>
+        <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">
+          {{ t('message.downloadDesc', [getProjectName()]) }}</p>
 
         <!-- 构建查看器 -->
-        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openGithub">{{ t('message.github_upper_case') }}</NButton>
-        <NButton type="primary" size="large" style="margin-right: 12px;" @click="openBuildViewer">
+        <NButton size="large" style="margin-right: 12px;" type="primary" @click="openGithub">
+          {{ t('message.github_upper_case') }}
+        </NButton>
+        <NButton size="large" style="margin-right: 12px;" type="primary" @click="openBuildViewer">
           {{ t('message.buildViewer') }}
         </NButton>
         <p style="font-size: 1.2rem;">{{ t('message.downloadNotice', [getProjectName()]) }}</p>
@@ -357,7 +354,7 @@ onMounted(() => {
       <div style="max-width: 900px; margin: 0 auto; padding: 0 24px;">
         <NSpin :show="loading">
           <div v-if="hasError">
-            <NAlert type="error" :title="t('message.error')" :closable="false">
+            <NAlert :closable="false" :title="t('message.error')" type="error">
               {{ t('message.fetchVersionInfoError') }}
             </NAlert>
           </div>
@@ -365,48 +362,52 @@ onMounted(() => {
           <div v-else style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
             <!-- 稳定版本 -->
             <NCard
-              v-for="release in getStableReleases().slice(0, 1)"
-              :key="release.tag_name"
-              :title="t('message.stableVersion')"
-              bordered
-              style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
+                v-for="release in getStableReleases().slice(0, 1)"
+                :key="release.tag_name"
+                :title="t('message.stableVersion')"
+                bordered
+                style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
             >
               <p style="margin-bottom: 20px;">
                 {{ t('message.version') }}:
                 <a
-                  href="javascript:void(0)"
-                  @click="openReleaseUrl(release.html_url)"
-                  style="color: #409eff; text-decoration: underline;"
+                    href="javascript:void(0)"
+                    style="color: #409eff; text-decoration: underline;"
+                    @click="openReleaseUrl(release.html_url)"
                 >
                   {{ release.tag_name }}
                 </a>
               </p>
-              <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{ formatReleaseDate(release.published_at) }}</p>
-              <NButton type="primary" size="large" style="width: 100%;" @click="openReleaseUrl(release.html_url)">
+              <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{
+                  formatReleaseDate(release.published_at)
+                }}</p>
+              <NButton size="large" style="width: 100%;" type="primary" @click="openReleaseUrl(release.html_url)">
                 {{ t('message.downloadStable') }}
               </NButton>
             </NCard>
 
             <!-- 开发版本 -->
             <NCard
-              v-for="release in getDevReleases().slice(0, 1)"
-              :key="release.tag_name"
-              :title="t('message.devVersion')"
-              bordered
-              style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
+                v-for="release in getDevReleases().slice(0, 1)"
+                :key="release.tag_name"
+                :title="t('message.devVersion')"
+                bordered
+                style="flex: 1 1 350px; max-width: 500px; padding: 30px;"
             >
               <p style="margin-bottom: 20px;">
                 {{ t('message.version') }}:
                 <a
-                  href="javascript:void(0)"
-                  @click="openReleaseUrl(release.html_url)"
-                  style="color: #409eff; text-decoration: underline;"
+                    href="javascript:void(0)"
+                    style="color: #409eff; text-decoration: underline;"
+                    @click="openReleaseUrl(release.html_url)"
                 >
                   {{ release.tag_name }}
                 </a>
               </p>
-              <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{ formatReleaseDate(release.published_at) }}</p>
-              <NButton type="warning" size="large" style="width: 100%;" @click="openReleaseUrl(release.html_url)">
+              <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{
+                  formatReleaseDate(release.published_at)
+                }}</p>
+              <NButton size="large" style="width: 100%;" type="warning" @click="openReleaseUrl(release.html_url)">
                 {{ t('message.downloadDev') }}
               </NButton>
             </NCard>
@@ -420,7 +421,9 @@ onMounted(() => {
           <div style="padding: 20px;">
             <ol style="text-align: left; font-size: 1rem; line-height: 1.8;">
               <li style="margin-bottom: 15px;">{{ t('message.installGuides.1', [getProjectName()]) }}</li>
-              <li style="margin-bottom: 15px;">{{ t('message.installGuides.2') }} <NCode :code="`java -jar ${getProjectName().toLowerCase()}-paperclip.jar`" lang="shell" inline/></li>
+              <li style="margin-bottom: 15px;">{{ t('message.installGuides.2') }}
+                <NCode :code="`java -jar ${getProjectName().toLowerCase()}-paperclip.jar`" inline lang="shell"/>
+              </li>
               <li>{{ t('message.installGuides.3', [getProjectName()]) }}</li>
             </ol>
           </div>
@@ -432,8 +435,12 @@ onMounted(() => {
         <NCard bordered>
           <div style="padding: 20px;">
             <ol style="text-align: left; font-size: 1rem; line-height: 1.8;">
-              <li style="margin-bottom: 15px;"><NCode :code="`git clone https://github.com/LuminolMC/${getProjectName()}.git`" lang="shell" inline/></li>
-              <li style="margin-bottom: 15px;"><NCode :code="getGradleCommand()" lang="shell" inline/></li>
+              <li style="margin-bottom: 15px;">
+                <NCode :code="`git clone https://github.com/LuminolMC/${getProjectName()}.git`" inline lang="shell"/>
+              </li>
+              <li style="margin-bottom: 15px;">
+                <NCode :code="getGradleCommand()" inline lang="shell"/>
+              </li>
               <li>{{ t('message.findYourJar') }}</li>
             </ol>
           </div>

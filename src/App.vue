@@ -1,27 +1,20 @@
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { RouterLink, useRoute } from 'vue-router'
-import { h, computed, onMounted, type Component } from 'vue'
+<script lang="ts" setup>
+import {useI18n} from 'vue-i18n'
+import {RouterLink, useRoute} from 'vue-router'
+import {type Component, computed, h, onMounted} from 'vue'
 import {ExternalLink} from "@vicons/tabler";
-import {
-  type MenuOption,
-  NMenu,
-  NLayoutFooter,
-  NDropdown,
-  NText,
-  NIcon
-} from 'naive-ui'
-import { useLanguageStore } from './store/language'
+import {type MenuOption, NDropdown, NIcon, NLayoutFooter, NMenu, NText} from 'naive-ui'
+import {useLanguageStore} from './store/language'
 
-const { t, locale } = useI18n()
+const {t, locale} = useI18n()
 
 function changeLanguage(lang: string) {
-    locale.value = lang
-    useLanguageStore().language = lang
+  locale.value = lang
+  useLanguageStore().language = lang
 }
 
 function renderIcon(icon: Component) {
-  return () => h(NIcon, null, { default: () => h(icon) })
+  return () => h(NIcon, null, {default: () => h(icon)})
 }
 
 onMounted(() => {
@@ -78,7 +71,7 @@ const menuOptions: MenuOption[] = [
             },
             t('message.luminolCraft')
         ),
-        icon: renderIcon(ExternalLink)
+    icon: renderIcon(ExternalLink)
   }
 ]
 
@@ -86,7 +79,7 @@ const dropdownOptions: MenuOption[] = [
   {
     label: t('message.simplifiedChinese'),
     props: {
-      onClick: () => {        
+      onClick: () => {
         changeLanguage('zh')
       }
     }
@@ -106,64 +99,66 @@ const currentRouteName = computed(() => route.name as string)
 </script>
 
 <template>
-    <NLayoutHeader>
-      <div class="header-container">
-        <div class="logo">Luminol</div>
-        <div style="flex-grow: 1;">
-          <NMenu :options="menuOptions" mode="horizontal" class="menu" v-model:value="currentRouteName"/>
-        </div>
-        <NDropdown trigger="hover" :options="dropdownOptions">
-          <NText class="language">{{ t('message.language') }}</NText>
-        </NDropdown>
+  <NLayoutHeader>
+    <div class="header-container">
+      <div class="logo">Luminol</div>
+      <div style="flex-grow: 1;">
+        <NMenu v-model:value="currentRouteName" :options="menuOptions" class="menu" mode="horizontal"/>
       </div>
-    </NLayoutHeader>
-    <router-view/>
-    <div style="padding-top: 20px;">
-      <NLayoutFooter style="background: #f5f5f5; padding: 40px 24px;">
-        <div class="footer-container">
-          <div class="footer-column">
-            <h3>{{ t('message.gettingStarted') }}</h3>
-            <ul>
-              <li>
-                <RouterLink to="/download">{{ t('message.downloads') }}</RouterLink>
-              </li>
-              <li><a href="#">{{ t('message.documentation') }}</a></li>
-              <li><a href="#">{{ t('message.javadocs') }}</a></li>
-            </ul>
-          </div>
-          <div class="footer-column">
-            <h3>{{ t('message.community') }}</h3>
-            <ul>
-              <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqGroup') }}</a></li>
-              <li><a href="https://github.com/LuminolMC">{{ t('message.github_upper_case') }}</a></li>
-              <li><a href="https://discord.gg/Qd7m3V6eDx">{{ t('message.discord') }}</a></li>
-              <li><a href="https://t.me/LuminolMinecraft">{{ t('message.telegram') }}</a></li>
-            </ul>
-          </div>
-          <div class="footer-column">
-            <h3>LuminolMC</h3>
-            <ul>
-              <li><RouterLink to="/team">{{ t('message.ourTeam') }}</RouterLink></li>
-              <li><a href="#">{{ t('message.contribute') }}</a></li>
-              <li><a href="https://afdian.com/a/Luminol">{{ t('message.sponsors') }}</a></li>
-            </ul>
-          </div>
-          <div class="footer-column">
-            <h3>{{ t('message.friendship_links') }}</h3>
-            <ul>
-              <li><a href="https://www.locyan.cn/">{{ t('message.locyanNetwork') }}</a></li>
-              <li><a href="https://www.rainyun.com/">{{ t('message.rainyun') }}</a></li>
-            </ul>
-          </div>
-        </div>
-        <div class="footer-bottom" style="margin-top: 30px; text-align: center;">
-          <p>{{ t('message.copyright') }}</p>
-          <!-- <p style="margin-top: 10px; font-size: 12px;">{{ t('message.websiteVersion') }} 02ef2e7</p> -->
-          <p style="margin-top: 10px; font-size: 12px;">{{ t('message.disclaimer') }}</p>
-<!--          <p><a href="https://github.com/LuminolMC/luminolmc.moe">luminolmc.moe @ {{ currentCommit }}</a></p>-->
-        </div>
-      </NLayoutFooter>
+      <NDropdown :options="dropdownOptions" trigger="hover">
+        <NText class="language">{{ t('message.language') }}</NText>
+      </NDropdown>
     </div>
+  </NLayoutHeader>
+  <router-view/>
+  <div style="padding-top: 20px;">
+    <NLayoutFooter style="background: #f5f5f5; padding: 40px 24px;">
+      <div class="footer-container">
+        <div class="footer-column">
+          <h3>{{ t('message.gettingStarted') }}</h3>
+          <ul>
+            <li>
+              <RouterLink to="/download">{{ t('message.downloads') }}</RouterLink>
+            </li>
+            <li><a href="#">{{ t('message.documentation') }}</a></li>
+            <li><a href="#">{{ t('message.javadocs') }}</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>{{ t('message.community') }}</h3>
+          <ul>
+            <li><a href="https://qm.qq.com/q/cFB0SXpWOQ">{{ t('message.qqGroup') }}</a></li>
+            <li><a href="https://github.com/LuminolMC">{{ t('message.github_upper_case') }}</a></li>
+            <li><a href="https://discord.gg/Qd7m3V6eDx">{{ t('message.discord') }}</a></li>
+            <li><a href="https://t.me/LuminolMinecraft">{{ t('message.telegram') }}</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>LuminolMC</h3>
+          <ul>
+            <li>
+              <RouterLink to="/team">{{ t('message.ourTeam') }}</RouterLink>
+            </li>
+            <li><a href="#">{{ t('message.contribute') }}</a></li>
+            <li><a href="https://afdian.com/a/Luminol">{{ t('message.sponsors') }}</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>{{ t('message.friendship_links') }}</h3>
+          <ul>
+            <li><a href="https://www.locyan.cn/">{{ t('message.locyanNetwork') }}</a></li>
+            <li><a href="https://www.rainyun.com/">{{ t('message.rainyun') }}</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom" style="margin-top: 30px; text-align: center;">
+        <p>{{ t('message.copyright') }}</p>
+        <!-- <p style="margin-top: 10px; font-size: 12px;">{{ t('message.websiteVersion') }} 02ef2e7</p> -->
+        <p style="margin-top: 10px; font-size: 12px;">{{ t('message.disclaimer') }}</p>
+        <!--          <p><a href="https://github.com/LuminolMC/luminolmc.moe">luminolmc.moe @ {{ currentCommit }}</a></p>-->
+      </div>
+    </NLayoutFooter>
+  </div>
 
 </template>
 

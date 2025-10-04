@@ -1,23 +1,23 @@
-<script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+<script lang="ts" setup>
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {
-  NLayout,
-  NLayoutContent,
-  NCard,
-  NTable,
-  NSpin,
   NAlert,
   NButton,
-  NTag,
+  NCard,
+  NInput,
+  NLayout,
+  NLayoutContent,
   NPagination,
   NSelect,
-  NInput,
+  NSpin,
+  NTable,
+  NTag,
   NTooltip
 } from 'naive-ui'
-import { formatReleaseDate } from '../utils/dateUtils.ts'
+import {formatReleaseDate} from '../utils/dateUtils.ts'
 
-const { t, locale } = useI18n()
+const {t, locale} = useI18n()
 
 interface BuildRecord {
   id: number
@@ -80,9 +80,9 @@ const searchKeyword = ref('')
 
 // 项目选项
 const projectOptions = [
-  { label: 'Luminol', value: 'Luminol' },
-  { label: 'Lophine', value: 'Lophine' },
-  { label: 'LightingLuminol', value: 'LightingLuminol' }
+  {label: 'Luminol', value: 'Luminol'},
+  {label: 'Lophine', value: 'Lophine'},
+  {label: 'LightingLuminol', value: 'LightingLuminol'}
 ]
 
 // 仓库映射
@@ -94,16 +94,16 @@ const repositoryMap: Record<string, string> = {
 
 // 状态选项
 const statusOptions = [
-  { label: t('message.buildStatus.success'), value: 'success' },
-  { label: t('message.buildStatus.failed'), value: 'failed' },
-  { label: t('message.buildStatus.building'), value: 'building' }
+  {label: t('message.buildStatus.success'), value: 'success'},
+  {label: t('message.buildStatus.failed'), value: 'failed'},
+  {label: t('message.buildStatus.building'), value: 'building'}
 ]
 
 // 根据仓库名获取项目名
 const getProjectNameByRepo = (repo: string) => {
   console.log('[getProjectNameByRepo] Looking up project name for repo:', repo)
   return Object.keys(repositoryMap).find(
-    key => repositoryMap[key].toLowerCase() === repo.toLowerCase()
+      key => repositoryMap[key].toLowerCase() === repo.toLowerCase()
   ) || repo.split('/')[1]
 }
 
@@ -226,7 +226,7 @@ const fetchGitHubReleases = async (page: number = 1) => {
       console.log('[fetchGitHubReleases] Fetching releases for repo:', repo)
       // 获取项目名
       const projectName = Object.keys(repositoryMap).find(
-        key => repositoryMap[key] === repo
+          key => repositoryMap[key] === repo
       ) || repo.split('/')[1]
       console.log('[fetchGitHubReleases] Project name for repo:', projectName)
 
@@ -237,7 +237,7 @@ const fetchGitHubReleases = async (page: number = 1) => {
       while (hasMore) {
         console.log('[fetchGitHubReleases] Fetching page', apiPage, 'for repo:', repo)
         const response = await fetch(
-          `https://api.github.com/repos/${repo}/releases?per_page=100&page=${apiPage}`
+            `https://api.github.com/repos/${repo}/releases?per_page=100&page=${apiPage}`
         )
         console.log('[fetchGitHubReleases] GitHub API response status:', response.status)
 
@@ -281,9 +281,9 @@ const fetchGitHubReleases = async (page: number = 1) => {
             if (release.assets && release.assets.length > 0) {
               // 查找有效的下载资产（排除源代码压缩包）
               const downloadAsset = release.assets.find((asset: any) =>
-                asset.browser_download_url &&
-                !asset.browser_download_url.includes('/source.') &&
-                (asset.content_type.includes('application/') || asset.name.endsWith('.jar'))
+                  asset.browser_download_url &&
+                  !asset.browser_download_url.includes('/source.') &&
+                  (asset.content_type.includes('application/') || asset.name.endsWith('.jar'))
               ) || release.assets[0];
 
               if (downloadAsset) {
@@ -291,6 +291,9 @@ const fetchGitHubReleases = async (page: number = 1) => {
                 downloadCount = downloadAsset.download_count || 0
               }
             }
+
+            // 从release body中提取commit message
+            const commitMessage = extractCommitMessage(release.body || '');
 
             return {
               id: release.id,
@@ -304,7 +307,7 @@ const fetchGitHubReleases = async (page: number = 1) => {
               commitHash: commitHash,
               branch: release.target_commitish || 'main',
               triggerBy: release.author?.login || 'Unknown',
-              commitMessage: '', // GitHub API不直接提供提交信息，需要额外请求
+              commitMessage: commitMessage, // 使用提取的commit message
               downloadUrl: downloadUrl,
               downloadCount: downloadCount,
               fromCache: false // 实时数据标记为非缓存
@@ -541,11 +544,11 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
     if (searchKeyword.value) {
       console.log('[processData] Applying search filter:', searchKeyword.value)
       allBuildRecords = allBuildRecords.filter(record =>
-        record.version.includes(searchKeyword.value) ||
-        record.projectName.includes(searchKeyword.value) ||
-        record.branch.includes(searchKeyword.value) ||
-        record.commitHash.includes(searchKeyword.value) ||
-        record.commitMessage.includes(searchKeyword.value)
+          record.version.includes(searchKeyword.value) ||
+          record.projectName.includes(searchKeyword.value) ||
+          record.branch.includes(searchKeyword.value) ||
+          record.commitHash.includes(searchKeyword.value) ||
+          record.commitMessage.includes(searchKeyword.value)
       )
       console.log('[processData] Records after search filter:', allBuildRecords.length)
     }
@@ -554,10 +557,18 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
     if (filterStatus.value) {
       console.log('[processData] Applying status filter:', filterStatus.value)
       allBuildRecords = allBuildRecords.filter(record =>
-        record.status === filterStatus.value
+          record.status === filterStatus.value
       )
       console.log('[processData] Records after status filter:', allBuildRecords.length)
     }
+
+    // 强制按时间排序（最新的在前）
+    allBuildRecords.sort((a, b) => {
+      const dateA = new Date(a.startTime).getTime();
+      const dateB = new Date(b.startTime).getTime();
+      return dateB - dateA;
+    });
+    console.log('[processData] Records sorted by time');
 
     totalBuilds.value = allBuildRecords.length
     console.log('[processData] Total builds after filtering:', totalBuilds.value)
@@ -579,19 +590,27 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
 
 const getStatusType = (status: string) => {
   switch (status) {
-    case 'success': return 'success'
-    case 'failed': return 'error'
-    case 'building': return 'warning'
-    default: return 'default'
+    case 'success':
+      return 'success'
+    case 'failed':
+      return 'error'
+    case 'building':
+      return 'warning'
+    default:
+      return 'default'
   }
 }
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'success': return t('message.buildStatus.success')
-    case 'failed': return t('message.buildStatus.failed')
-    case 'building': return t('message.buildStatus.building')
-    default: return status
+    case 'success':
+      return t('message.buildStatus.success')
+    case 'failed':
+      return t('message.buildStatus.failed')
+    case 'building':
+      return t('message.buildStatus.building')
+    default:
+      return status
   }
 }
 
@@ -611,7 +630,7 @@ const getVersionSuffix = (version: string) => {
 
 // 添加新的时间格式化函数，用于将时间分三行显示（根据语言环境决定时区）
 const formatReleaseDateTimeLines = (dateString: string) => {
-  if (!dateString) return { date: '', time: '', timezone: '' }
+  if (!dateString) return {date: '', time: '', timezone: ''}
 
   try {
     // 处理 ISO 8601 格式的时间字符串
@@ -651,7 +670,7 @@ const formatReleaseDateTimeLines = (dateString: string) => {
     // 如果日期解析失败，尝试手动分割字符串
     const parts = dateString.split('T')
     if (parts.length < 2) {
-      return { date: dateString, time: '', timezone: '' }
+      return {date: dateString, time: '', timezone: ''}
     }
 
     const datePart = parts[0]
@@ -718,14 +737,14 @@ const formatReleaseDateTimeLines = (dateString: string) => {
     }
   } catch (e) {
     console.error('Error formatting date:', e)
-    return { date: dateString, time: '', timezone: '' }
+    return {date: dateString, time: '', timezone: ''}
   }
 }
 
 const pageSizeOptions = computed(() => [
   10, 20, 50, 100, 200, 500, 1000
 ].map(size => ({
-  label: t('message.pageSize', { count: size }),
+  label: t('message.pageSize', {count: size}),
   value: size
 })))
 
@@ -850,7 +869,7 @@ const resizeColumn = (e: MouseEvent) => {
     if (table) {
       const currentTableWidth = resizingColumnInfo.value.tableWidth
       const newTableWidth = currentTableWidth + (newLeftWidth + newRightWidth -
-                               (resizingColumnInfo.value.leftStartWidth + resizingColumnInfo.value.rightStartWidth))
+          (resizingColumnInfo.value.leftStartWidth + resizingColumnInfo.value.rightStartWidth))
       table.style.width = `${newTableWidth}px`
     }
   }
@@ -895,23 +914,23 @@ onBeforeUnmount(() => {
         <!-- 筛选区域 -->
         <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
           <NSelect
-            v-model:value="filterProject"
-            :options="projectOptions"
-            :placeholder="t('message.selectProject')"
-            clearable
-            style="width: 200px;"
+              v-model:value="filterProject"
+              :options="projectOptions"
+              :placeholder="t('message.selectProject')"
+              clearable
+              style="width: 200px;"
           />
           <NSelect
-            v-model:value="filterStatus"
-            :options="statusOptions"
-            :placeholder="t('message.selectStatus')"
-            clearable
-            style="width: 200px;"
+              v-model:value="filterStatus"
+              :options="statusOptions"
+              :placeholder="t('message.selectStatus')"
+              clearable
+              style="width: 200px;"
           />
           <NInput
-            v-model:value="searchKeyword"
-            :placeholder="t('message.searchKeyword')"
-            style="width: 400px;"
+              v-model:value="searchKeyword"
+              :placeholder="t('message.searchKeyword')"
+              style="width: 400px;"
           />
           <NButton @click="performSearch">
             {{ t('message.search') }}
@@ -927,7 +946,7 @@ onBeforeUnmount(() => {
 
         <NSpin :show="loading">
           <div v-if="error && !builds.length">
-            <NAlert type="error" :title="t('message.error')" :closable="false">
+            <NAlert :closable="false" :title="t('message.error')" type="error">
               {{ error }}
             </NAlert>
           </div>
@@ -937,149 +956,151 @@ onBeforeUnmount(() => {
             <div class="table-container">
               <NTable :bordered="true" :single-line="false" class="build-table">
                 <thead>
-                  <tr>
-                    <th class="resizable-column" @mousedown="startResizing($event, 0)">
-                      <div class="column-content">{{ t('message.project') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 1)">
-                      <div class="column-content">{{ t('message.versionPrefix') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 2)">
-                      <div class="column-content">{{ t('message.versionSuffix') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 3)">
-                      <div class="column-content">{{ t('message.status') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 4)">
-                      <div class="column-content">{{ t('message.startTime') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 5)">
-                      <div class="column-content">{{ t('message.branch') }}</div>
-                    </th>
-                    <th class="resizable-column commit-message-column" @mousedown="startResizing($event, 6)">
-                      <div class="column-content">{{ t('message.commitMessage') }}</div>
-                    </th>
-                    <th class="resizable-column" @mousedown="startResizing($event, 7)">
-                      <div class="column-content">{{ t('message.download') }}</div>
-                    </th>
-                    <th class="resizable-column" style="width: 100px;" @mousedown="startResizing($event, 8)">
-                      <div class="column-content">{{ t('message.actions') }}</div>
-                    </th>
-                  </tr>
+                <tr>
+                  <th class="resizable-column" @mousedown="startResizing($event, 0)">
+                    <div class="column-content">{{ t('message.project') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 1)">
+                    <div class="column-content">{{ t('message.versionPrefix') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 2)">
+                    <div class="column-content">{{ t('message.versionSuffix') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 3)">
+                    <div class="column-content">{{ t('message.status') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 4)">
+                    <div class="column-content">{{ t('message.startTime') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 5)">
+                    <div class="column-content">{{ t('message.branch') }}</div>
+                  </th>
+                  <th class="resizable-column commit-message-column" @mousedown="startResizing($event, 6)">
+                    <div class="column-content">{{ t('message.commitMessage') }}</div>
+                  </th>
+                  <th class="resizable-column" @mousedown="startResizing($event, 7)">
+                    <div class="column-content">{{ t('message.download') }}</div>
+                  </th>
+                  <th class="resizable-column" style="width: 100px;" @mousedown="startResizing($event, 8)">
+                    <div class="column-content">{{ t('message.actions') }}</div>
+                  </th>
+                </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="build in builds" :key="build.id">
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">{{ build.projectName }}</div>
-                        </template>
-                        {{ build.projectName }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">{{ getVersionPrefix(build.version) }}</div>
-                        </template>
-                        {{ getVersionPrefix(build.version) }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="cell-content">{{ getVersionSuffix(build.version) }}</div>
-                        </template>
-                        {{ getVersionSuffix(build.version) }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <NTag :type="getStatusType(build.status)">
-                        {{ getStatusText(build.status) }}
-                      </NTag>
-                    </td>
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
-                        <template #trigger>
-                          <div class="datetime-cell">
-                            <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).date }}</div>
-                            <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).time }}</div>
-                            <div class="datetime-line timezone-line">{{ formatReleaseDateTimeLines(build.startTime).timezone }}</div>
+                <tr v-for="build in builds" :key="build.id">
+                  <td>
+                    <NTooltip placement="top" trigger="hover">
+                      <template #trigger>
+                        <div class="cell-content">{{ build.projectName }}</div>
+                      </template>
+                      {{ build.projectName }}
+                    </NTooltip>
+                  </td>
+                  <td>
+                    <NTooltip placement="top" trigger="hover">
+                      <template #trigger>
+                        <div class="cell-content">{{ getVersionPrefix(build.version) }}</div>
+                      </template>
+                      {{ getVersionPrefix(build.version) }}
+                    </NTooltip>
+                  </td>
+                  <td>
+                    <NTooltip placement="top" trigger="hover">
+                      <template #trigger>
+                        <div class="cell-content">{{ getVersionSuffix(build.version) }}</div>
+                      </template>
+                      {{ getVersionSuffix(build.version) }}
+                    </NTooltip>
+                  </td>
+                  <td>
+                    <NTag :type="getStatusType(build.status)">
+                      {{ getStatusText(build.status) }}
+                    </NTag>
+                  </td>
+                  <td>
+                    <NTooltip placement="top" trigger="hover">
+                      <template #trigger>
+                        <div class="datetime-cell">
+                          <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).date }}</div>
+                          <div class="datetime-line">{{ formatReleaseDateTimeLines(build.startTime).time }}</div>
+                          <div class="datetime-line timezone-line">
+                            {{ formatReleaseDateTimeLines(build.startTime).timezone }}
                           </div>
-                        </template>
-                        {{ formatReleaseDate(build.startTime) }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <NTooltip trigger="hover" placement="top">
+                        </div>
+                      </template>
+                      {{ formatReleaseDate(build.startTime) }}
+                    </NTooltip>
+                  </td>
+                  <td>
+                    <NTooltip placement="top" trigger="hover">
+                      <template #trigger>
+                        <div class="cell-content">{{ build.branch }}</div>
+                      </template>
+                      {{ build.branch }}
+                    </NTooltip>
+                  </td>
+                  <td>
+                    <div class="commit-message-cell">{{ build.commitMessage }}</div>
+                  </td>
+                  <td>
+                    <div v-if="build.downloadUrl" class="download-cell">
+                      <NTooltip placement="top" trigger="hover">
                         <template #trigger>
-                          <div class="cell-content">{{ build.branch }}</div>
+                          <NButton text type="primary" @click="downloadBuild(build)">
+                            {{ t('message.download') }}
+                          </NButton>
                         </template>
-                        {{ build.branch }}
-                      </NTooltip>
-                    </td>
-                    <td>
-                      <div class="commit-message-cell">{{ build.commitMessage }}</div>
-                    </td>
-                    <td>
-                      <div v-if="build.downloadUrl" class="download-cell">
-                        <NTooltip trigger="hover" placement="top">
-                          <template #trigger>
-                            <NButton text type="primary" @click="downloadBuild(build)">
-                              {{ t('message.download') }}
-                            </NButton>
-                          </template>
-                          <span :style="{ color: build.fromCache ? 'red' : 'green' }">
+                        <span :style="{ color: build.fromCache ? 'red' : 'green' }">
                             {{ build.fromCache ? t('message.dataFromCache') : t('message.realTimeData') }}
                           </span>
-                        </NTooltip>
-                        <span
+                      </NTooltip>
+                      <span
                           :style="{
                             color: build.fromCache ? 'red' : 'green',
                             marginLeft: '5px'
                           }"
                           :title="build.fromCache ? t('message.dataFromCache') : t('message.realTimeData')"
-                        >
+                      >
                           ({{ build.downloadCount }})
                         </span>
-                      </div>
-                      <div v-else>
-                        {{ t('message.noDownloadAvailable') }}
-                      </div>
-                    </td>
-                    <td>
-                      <NButton text type="primary" @click="viewBuildDetails(build)">
-                        {{ t('message.viewDetails') }}
-                      </NButton>
-                    </td>
-                  </tr>
-                  <tr v-if="builds.length === 0">
-                    <td colspan="9" style="text-align: center;">{{ t('message.noBuildRecords') }}</td>
-                  </tr>
+                    </div>
+                    <div v-else>
+                      {{ t('message.noDownloadAvailable') }}
+                    </div>
+                  </td>
+                  <td>
+                    <NButton text type="primary" @click="viewBuildDetails(build)">
+                      {{ t('message.viewDetails') }}
+                    </NButton>
+                  </td>
+                </tr>
+                <tr v-if="builds.length === 0">
+                  <td colspan="9" style="text-align: center;">{{ t('message.noBuildRecords') }}</td>
+                </tr>
                 </tbody>
               </NTable>
             </div>
 
             <div style="display: flex; justify-content: center; margin-top: 20px; align-items: center; gap: 16px;">
               <NPagination
-                v-model:page="currentPage"
-                :page-size="pageSize"
-                :item-count="totalBuilds"
-                :page-sizes="pageSizeOptions"
-                show-size-picker
-                @update:page="handlePageChange"
-                @update:page-size="handlePageSizeChange"
+                  v-model:page="currentPage"
+                  :item-count="totalBuilds"
+                  :page-size="pageSize"
+                  :page-sizes="pageSizeOptions"
+                  show-size-picker
+                  @update:page="handlePageChange"
+                  @update:page-size="handlePageSizeChange"
               />
               <!-- 添加页码跳转功能 -->
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span>{{ t('message.goToPage') }}</span>
                 <NInput
-                  v-model:value="jumpPageInput"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  :placeholder="t('message.pageNumber')"
-                  style="width: 100px;"
-                  @keyup.enter="handleJumpPage"
+                    v-model:value="jumpPageInput"
+                    :placeholder="t('message.pageNumber')"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    style="width: 100px;"
+                    @keyup.enter="handleJumpPage"
                 />
                 <NButton @click="handleJumpPage">
                   {{ t('message.go') }}

@@ -1,15 +1,11 @@
-<script setup lang="ts">
-import { callApi } from "@zayne-labs/callapi";
-import { ref, onMounted, computed } from "vue"
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-import {
-  NLayout,
-  NLayoutContent,
-  NButton,
-  NCard,
-} from 'naive-ui'
+<script lang="ts" setup>
+import {callApi} from "@zayne-labs/callapi";
+import {computed, onMounted, ref} from "vue"
+import {useI18n} from 'vue-i18n'
+import {NButton, NCard, NLayout, NLayoutContent,} from 'naive-ui'
 import {useRouter} from "vue-router";
+
+const {t} = useI18n()
 
 type TimeValuePair = [number, number]
 type TimeSeriesData = TimeValuePair[];
@@ -29,7 +25,7 @@ onMounted(async () => {
 
   try {
     const promises = urls.map(url =>
-        callApi<TimeSeriesData>(url, { signal: controller.signal })
+        callApi<TimeSeriesData>(url, {signal: controller.signal})
             .then(response => {
               if (response.data === null) {
                 throw new Error(`Unable to retrieve time series for ${url}`);
@@ -55,9 +51,13 @@ const goTo = (url: string) => {
 
 const softwareItems = computed(() => {
   return [
-    { name: "Luminol", description: t('message.software.luminolDesc'), link: "https://github.com/LuminolMC/Luminol" },
-    { name: "Lophine", description: t('message.software.lophineDesc'), link: "https://github.com/LuminolMC/Lophine" },
-    { name: "LightingLuminol", description: t('message.software.lightningLuminolDesc'), link: "https://github.com/LuminolMC/LightingLuminol" },
+    {name: "Luminol", description: t('message.software.luminolDesc'), link: "https://github.com/LuminolMC/Luminol"},
+    {name: "Lophine", description: t('message.software.lophineDesc'), link: "https://github.com/LuminolMC/Lophine"},
+    {
+      name: "LightingLuminol",
+      description: t('message.software.lightningLuminolDesc'),
+      link: "https://github.com/LuminolMC/LightingLuminol"
+    },
   ]
 })
 </script>
@@ -66,38 +66,39 @@ const softwareItems = computed(() => {
   <NLayout class="layout">
     <NLayoutContent style="padding: 0; margin: 0; width: 100%; box-sizing: border-box;">
       <!-- Hero -->
-      <div style="text-align: center; padding: 200px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
+      <div
+          style="text-align: center; padding: 200px 24px; background: #b6ade6; color: white; margin-bottom: 40px; width: 100%; box-sizing: border-box; position: relative;">
         <h1 style="font-size: 4rem; margin-bottom: 20px;">Luminol</h1>
         <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 30px;">{{ t('message.welcome') }}</p>
         <div style="display: inline-flex; align-items: center;">
           <!-- 添加了开始使用按钮的跳转功能 -->
           <NButton
-            type="primary"
-            size="large"
-            style="margin-right: 12px;"
-            @click="router.push('/download')">
+              size="large"
+              style="margin-right: 12px;"
+              type="primary"
+              @click="router.push('/download')">
             {{ t('message.startUsing') }}
           </NButton>
           <!-- 添加了了解更多按钮的跳转功能 -->
           <NButton
-            strong secondary
-            size="large"
-            style="margin-right: 12px;"
-            @click="goTo('https://github.com/LuminolMC/Luminol')">
+              secondary size="large"
+              strong
+              style="margin-right: 12px;"
+              @click="goTo('https://github.com/LuminolMC/Luminol')">
             {{ t('message.learnMore') }}
           </NButton>
           <NButton
-            type="info"
-            strong secondary
-            size="large"
-            style="color: black; margin-right: 0;"
-            @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
-            {{ t('message.deployOnRainyun') }}&nbsp<img src="../assets/rainyun.svg" alt="rainyun" height="20px"/>
+              secondary
+              size="large" strong
+              style="color: black; margin-right: 0;"
+              type="info"
+              @click="goTo('https://www.rainyun.com/rgs/aiyuyun_')">
+            {{ t('message.deployOnRainyun') }}&nbsp<img alt="rainyun" height="20px" src="../assets/rainyun.svg"/>
           </NButton>
         </div>
 
         <div style="font-size: 1.1rem">
-          <p v-if="!isLoading && !error">{{ t('message.servingPlayers', { count: sum }) }}</p>
+          <p v-if="!isLoading && !error">{{ t('message.servingPlayers', {count: sum}) }}</p>
           <p v-else-if="isLoading">{{ t('message.loadingPlayers') }}</p>
           <p v-else class="error">{{ t('message.' + error) }}</p>
         </div>
@@ -106,7 +107,8 @@ const softwareItems = computed(() => {
       <h2 style="text-align: center; font-size: 2rem; margin: 60px 0 40px;">{{ t('message.majorProject') }}</h2>
       <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
         <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;">
-          <NCard v-for="(item) in softwareItems" :title="item.name" class="software-card" hoverable @click="goTo(item.link)">
+          <NCard v-for="(item) in softwareItems" :title="item.name" class="software-card" hoverable
+                 @click="goTo(item.link)">
             {{ item.description }}
           </NCard>
         </div>

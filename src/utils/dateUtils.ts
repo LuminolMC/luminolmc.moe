@@ -1,7 +1,7 @@
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
 
 export const formatReleaseDate = (dateString: string) => {
-    const { locale } = useI18n()
+    const {locale} = useI18n()
     const date = new Date(dateString)
     const isChinese = locale.value === 'zh'
 
