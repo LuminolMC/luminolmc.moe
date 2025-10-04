@@ -68,7 +68,7 @@ const resizingColumnInfo = ref<{
 // 缓存相关
 const CACHE_KEY = 'github_releases_cache'
 const CACHE_DURATION = 15 * 60 * 1000 // 15分钟
-const BACKUP_CACHE_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun//github_releases.json'
+const BACKUP_CACHE_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun/github_releases.json'
 const BACKUP_CACHE_OLD_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun/github_releases.old.json'
 const COOLDOWN_DURATION = 5 * 60 * 1000 // 5分钟冷却期
 let lastErrorTime = 0 // 上次错误时间
