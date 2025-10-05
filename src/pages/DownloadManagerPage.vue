@@ -263,24 +263,41 @@ const fetchReleases = async (page: number = 1) => {
       }
     }
 
+    let dataFetched = false;
+
     // 根据选择的默认来源决定获取数据的方式
     if (defaultSource.value === null || defaultSource.value === 'github') {
       // GitHub API 获取数据
       await fetchFromGitHub(page)
-    }
-    if (defaultSource.value === null) {
-      for (let i = 0; i < cacheConfigs.length; i++) {
-        // 从配置文件指定的服务器获取数据
-        await fetchFromBackup(i, page)
+      // 检查是否成功获取到数据
+      if (builds.value.length > 0 && !filterProject.value && !filterStatus.value &&
+          !searchKeyword.value && !filterVersionPrefix.value) {
+        dataFetched = true;
       }
-    } else if (defaultSource.value.startsWith('backup-')) {
-      // 从指定的备份服务器获取数据
-      const backupIndex = parseInt(defaultSource.value.split('-')[1])
-      await fetchFromBackup(backupIndex, page)
+    }
+
+    // 只有在没有从GitHub获取到数据时才尝试备份服务器
+    if (!dataFetched) {
+      if (defaultSource.value === null) {
+        // 遍历所有备份配置，直到成功获取数据为止
+        for (let i = 0; i < cacheConfigs.length; i++) {
+          // 从配置文件指定的服务器获取数据
+          await fetchFromBackup(i, page)
+          // 检查是否成功获取到数据
+          if (builds.value.length > 0) {
+            dataFetched = true;
+            break; // 成功获取数据后退出循环
+          }
+        }
+      } else if (defaultSource.value.startsWith('backup-')) {
+        // 从指定的备份服务器获取数据
+        const backupIndex = parseInt(defaultSource.value.split('-')[1])
+        await fetchFromBackup(backupIndex, page)
+      }
     }
 
     // 如果所有方法都失败，尝试使用缓存数据
-    if (useCacheData(page)) {
+    if (!dataFetched && useCacheData(page)) {
       loading.value = false
       console.log('[fetchReleases] Using cached data as final fallback')
       return
