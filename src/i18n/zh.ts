@@ -90,6 +90,7 @@ export default {
         },
         selectProject: '选择项目',
         selectStatus: '选择状态',
+        selectVersionPrefix: '选择Minecraft版本',
         searchKeyword: '搜索关键词',
         search: '搜索',
         reset: '重置',

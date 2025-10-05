@@ -76,6 +76,7 @@ let lastErrorTime = 0 // 上次错误时间
 // 筛选条件
 const filterProject = ref<string | null>(null)
 const filterStatus = ref<string | null>(null)
+const filterVersionPrefix = ref<string | null>(null)
 const searchKeyword = ref('')
 
 // 项目选项
@@ -98,6 +99,44 @@ const statusOptions = [
   {label: t('message.buildStatus.failed'), value: 'failed'},
   {label: t('message.buildStatus.building'), value: 'building'}
 ]
+
+// 版本前缀选项（从所有数据中提取）
+const versionPrefixOptions = computed(() => {
+  // 从缓存中获取所有数据以构建完整的选项列表
+  const allData = getCachedData() || builds.value
+  const prefixes = new Set<string>()
+
+  allData.forEach((build: BuildRecord) => {
+    const prefix = getVersionPrefix(build.version)
+    if (prefix) {
+      prefixes.add(prefix)
+    }
+  })
+
+  // 按Minecraft版本号规则排序（从高到低）
+  return Array.from(prefixes)
+      .sort((a, b) => {
+        // 将版本号分割为数字部分进行比较
+        const aParts = a.split('.').map(Number)
+        const bParts = b.split('.').map(Number)
+
+        // 依次比较各部分
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          const aPart = aParts[i] || 0
+          const bPart = bParts[i] || 0
+
+          if (aPart !== bPart) {
+            return bPart - aPart // 从高到低排序
+          }
+        }
+
+        return 0
+      })
+      .map(prefix => ({
+        label: prefix,
+        value: prefix
+      }))
+})
 
 // 根据仓库名获取项目名
 const getProjectNameByRepo = (repo: string) => {
@@ -337,7 +376,7 @@ const fetchGitHubReleases = async (page: number = 1) => {
     if (allBuildRecords.length > 0) {
       console.log('[fetchGitHubReleases] Total records from GitHub API:', allBuildRecords.length)
       // 保存到缓存（仅在获取完整数据时缓存）
-      if (!filterProject.value && !filterStatus.value && !searchKeyword.value) {
+      if (!filterProject.value && !filterStatus.value && !searchKeyword.value && !filterVersionPrefix.value) {
         console.log('[fetchGitHubReleases] Saving GitHub API data to cache')
         saveToCache(allBuildRecords)
       }
@@ -355,7 +394,8 @@ const fetchGitHubReleases = async (page: number = 1) => {
     if (cachedData && page === 1 &&
         !filterProject.value &&
         !filterStatus.value &&
-        !searchKeyword.value) {
+        !searchKeyword.value &&
+        !filterVersionPrefix.value) {
       console.log('[fetchGitHubReleases] Using cached data without filters')
       // 使用缓存数据，即使可能未更新
       processData(cachedData, page, 'cache')
@@ -499,7 +539,7 @@ const fetchGitHubReleases = async (page: number = 1) => {
         console.log('[fetchGitHubReleases] Processed backup data, total records:', allBuildRecords.length)
 
         // 保存到本地缓存
-        if (!filterProject.value && !filterStatus.value && !searchKeyword.value) {
+        if (!filterProject.value && !filterStatus.value && !searchKeyword.value && !filterVersionPrefix.value) {
           console.log('[fetchGitHubReleases] Saving backup data to cache')
           saveToCache(allBuildRecords)
         }
@@ -560,6 +600,24 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
           record.status === filterStatus.value
       )
       console.log('[processData] Records after status filter:', allBuildRecords.length)
+    }
+
+    // 应用项目过滤
+    if (filterProject.value) {
+      console.log('[processData] Applying project filter:', filterProject.value)
+      allBuildRecords = allBuildRecords.filter(record =>
+          record.projectName === filterProject.value
+      )
+      console.log('[processData] Records after project filter:', allBuildRecords.length)
+    }
+
+    // 应用版本前缀过滤
+    if (filterVersionPrefix.value) {
+      console.log('[processData] Applying version prefix filter:', filterVersionPrefix.value)
+      allBuildRecords = allBuildRecords.filter(record =>
+          getVersionPrefix(record.version) === filterVersionPrefix.value
+      )
+      console.log('[processData] Records after version prefix filter:', allBuildRecords.length)
     }
 
     // 强制按时间排序（最新的在前）
@@ -796,6 +854,7 @@ const resetFilters = () => {
   console.log('[resetFilters] Resetting all filters')
   filterProject.value = null
   filterStatus.value = null
+  filterVersionPrefix.value = null
   searchKeyword.value = ''
   currentPage.value = 1
   jumpPageInput.value = '1' // 重置跳转页码输入框
@@ -924,6 +983,13 @@ onBeforeUnmount(() => {
               v-model:value="filterStatus"
               :options="statusOptions"
               :placeholder="t('message.selectStatus')"
+              clearable
+              style="width: 200px;"
+          />
+          <NSelect
+              v-model:value="filterVersionPrefix"
+              :options="versionPrefixOptions"
+              :placeholder="t('message.selectVersionPrefix')"
               clearable
               style="width: 200px;"
           />

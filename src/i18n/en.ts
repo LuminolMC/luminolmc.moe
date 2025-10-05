@@ -90,6 +90,7 @@ export default {
         },
         selectProject: 'Select Project',
         selectStatus: 'Select Status',
+        selectVersionPrefix: 'Select Minecraft Version',
         searchKeyword: 'Search Keyword',
         search: 'Search',
         reset: 'Reset',
