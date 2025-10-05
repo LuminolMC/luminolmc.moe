@@ -78,10 +78,9 @@ export default {
         // DownloadManagerPage 相关翻译
         buildViewer: '构建查看器',
         buildHistory: '构建历史 - 部分数据可能来自缓存',
-        buildStatus: {
-            success: '正式版',
-            failed: '未知',
-            building: '预发行版'
+        releaseType: {
+            release: '正式版',
+            prerelease: '预发行版'
         },
         time: {
             hour: '小时',
@@ -124,7 +123,7 @@ export default {
         simplifiedChinese: '简体中文',
         english: 'English',
         telegram: 'Telegram',
-        locyanNetwork: 'Locyan Network',
+        locyanNetwork: '乐青团队',
         rainyun: '雨云',
         deployOnRainyun: '在雨云上部署'
     }

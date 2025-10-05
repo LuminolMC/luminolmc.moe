@@ -78,10 +78,9 @@ export default {
         // DownloadManagerPage related translations
         buildViewer: 'Build Viewer',
         buildHistory: 'Build History - Some data may come from the cache',
-        buildStatus: {
-            success: 'Release',
-            failed: 'Unknown',
-            building: 'Pre-release'
+        releaseType: {
+            release: 'Release',
+            prerelease: 'Pre-release'
         },
         time: {
             hour: 'h',
@@ -121,8 +120,8 @@ export default {
         simplifiedChinese: '简体中文',
         english: 'English',
         telegram: 'Telegram',
-        locyanNetwork: 'Locyan Network',
-        rainyun: '雨云',
+        locyanNetwork: 'LoCyanTeam',
+        rainyun: 'Rainyun',
         deployOnRainyun: 'Deploy on Rainyun'
     }
 }

@@ -26,7 +26,7 @@ interface BuildRecord {
   projectName: string
   version: string
   buildNumber: number
-  status: 'success' | 'failed' | 'building'
+  releaseType: 'release' | 'prerelease'
   startTime: string
   endTime: string
   duration: number // in seconds
@@ -56,7 +56,7 @@ let lastErrorTime = 0 // 上次错误时间
 
 // 筛选条件
 const filterProject = ref<string | null>(null)
-const filterStatus = ref<string | null>(null)
+const filterReleaseType = ref<string | null>(null)
 const filterVersionPrefix = ref<string | null>(null)
 const searchKeyword = ref('')
 
@@ -95,10 +95,9 @@ const repositoryMap: Record<string, string> = {
 }
 
 // 状态选项
-const statusOptions = [
-  {label: t('message.buildStatus.success'), value: 'success'},
-  {label: t('message.buildStatus.failed'), value: 'failed'},
-  {label: t('message.buildStatus.building'), value: 'building'}
+const releaseTypeOptions = [
+  {label: t('message.releaseType.release'), value: 'release'},
+  {label: t('message.releaseType.prerelease'), value: 'prerelease'}
 ]
 
 // 版本前缀选项（从所有数据中提取）
@@ -270,8 +269,7 @@ const fetchReleases = async (page: number = 1) => {
       // GitHub API 获取数据
       await fetchFromGitHub(page)
       // 检查是否成功获取到数据
-      if (builds.value.length > 0 && !filterProject.value && !filterStatus.value &&
-          !searchKeyword.value && !filterVersionPrefix.value) {
+      if (builds.value.length > 0) {
         dataFetched = true;
       }
     }
@@ -408,7 +406,7 @@ const fetchFromGitHub = async (page: number) => {
             projectName: projectName,
             version: release.tag_name,
             buildNumber: release.id,
-            status: release.prerelease ? 'building' : 'success',
+            releaseType: release.prerelease ? 'prerelease' : 'release',
             startTime: release.published_at,
             endTime: release.published_at,
             duration: 0,
@@ -445,7 +443,7 @@ const fetchFromGitHub = async (page: number) => {
   if (allBuildRecords.length > 0) {
     console.log('[fetchFromGitHub] Total records from GitHub API:', allBuildRecords.length)
     // 保存到缓存（仅在获取完整数据时缓存）
-    if (!filterProject.value && !filterStatus.value && !searchKeyword.value && !filterVersionPrefix.value) {
+    if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
       console.log('[fetchFromGitHub] Saving GitHub API data to cache')
       saveToCache(allBuildRecords)
     }
@@ -461,7 +459,7 @@ const fetchFromGitHub = async (page: number) => {
   const cachedData = getCachedData()
   if (cachedData && page === 1 &&
       !filterProject.value &&
-      !filterStatus.value &&
+      !filterReleaseType.value &&
       !searchKeyword.value &&
       !filterVersionPrefix.value) {
     console.log('[fetchFromGitHub] Using cached data without filters')
@@ -574,11 +572,11 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
         }
 
         // 根据备份数据中的状态字段设置状态，如果没有则根据tag名称判断
-        let status: 'success' | 'failed' | 'building' = 'success'
-        if (item.status) {
-          status = item.status
+        let releaseType: 'release' | 'prerelease' = 'release'
+        if (item.releaseType) {
+          releaseType = item.releaseType
         } else if (item.prerelease !== undefined) {
-          status = item.prerelease ? 'building' : 'success'
+          releaseType = item.prerelease ? 'prerelease' : 'release'
         } else {
           // 根据tag名称判断是否为预发布版本
           const lowerTagName = item.tag_name.toLowerCase()
@@ -587,7 +585,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
               lowerTagName.includes('rc') ||
               lowerTagName.includes('snapshot') ||
               lowerTagName.includes('dev')) {
-            status = 'building'
+            releaseType = 'prerelease'
           }
         }
 
@@ -596,7 +594,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
           projectName: projectName,
           version: version,
           buildNumber: item.id || Math.floor(Math.random() * 1000000),
-          status: status,
+          releaseType: releaseType,
           startTime: item.published_at || new Date().toISOString(),
           endTime: item.published_at || new Date().toISOString(),
           duration: item.duration || 0,
@@ -613,7 +611,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
       console.log('[fetchFromBackup] Processed backup data, total records:', allBuildRecords.length)
 
       // 保存到本地缓存
-      if (!filterProject.value && !filterStatus.value && !searchKeyword.value && !filterVersionPrefix.value) {
+      if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
         console.log('[fetchFromBackup] Saving backup data to cache')
         saveToCache(allBuildRecords)
       }
@@ -650,12 +648,12 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
     }
 
     // 应用状态过滤
-    if (filterStatus.value) {
-      console.log('[processData] Applying status filter:', filterStatus.value)
+    if (filterReleaseType.value) {
+      console.log('[processData] Applying release type filter:', filterReleaseType.value)
       allBuildRecords = allBuildRecords.filter(record =>
-          record.status === filterStatus.value
+          record.releaseType === filterReleaseType.value
       )
-      console.log('[processData] Records after status filter:', allBuildRecords.length)
+      console.log('[processData] Records after release type filter:', allBuildRecords.length)
     }
 
     // 应用项目过滤
@@ -702,29 +700,25 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
   }
 }
 
-const getStatusType = (status: string) => {
-  switch (status) {
-    case 'success':
+const getReleaseTypeType = (releaseType: string) => {
+  switch (releaseType) {
+    case 'release':
       return 'success'
-    case 'failed':
-      return 'error'
-    case 'building':
+    case 'prerelease':
       return 'warning'
     default:
       return 'default'
   }
 }
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'success':
-      return t('message.buildStatus.success')
-    case 'failed':
-      return t('message.buildStatus.failed')
-    case 'building':
-      return t('message.buildStatus.building')
+const getReleaseTypeText = (releaseType: string) => {
+  switch (releaseType) {
+    case 'release':
+      return t('message.releaseType.release')
+    case 'prerelease':
+      return t('message.releaseType.prerelease')
     default:
-      return status
+      return releaseType
   }
 }
 
@@ -909,7 +903,7 @@ const performSearch = () => {
 const resetFilters = () => {
   console.log('[resetFilters] Resetting all filters')
   filterProject.value = null
-  filterStatus.value = null
+  filterReleaseType.value = null
   filterVersionPrefix.value = null
   searchKeyword.value = ''
   currentPage.value = 1
@@ -1044,8 +1038,8 @@ onBeforeUnmount(() => {
               style="width: 200px;"
           />
           <NSelect
-              v-model:value="filterStatus"
-              :options="statusOptions"
+              v-model:value="filterReleaseType"
+              :options="releaseTypeOptions"
               :placeholder="t('message.selectStatus')"
               clearable
               style="width: 200px;"
@@ -1143,8 +1137,8 @@ onBeforeUnmount(() => {
                     </NTooltip>
                   </td>
                   <td>
-                    <NTag :type="getStatusType(build.status)">
-                      {{ getStatusText(build.status) }}
+                    <NTag :type="getReleaseTypeType(build.releaseType)">
+                      {{ getReleaseTypeText(build.releaseType) }}
                     </NTag>
                   </td>
                   <td>
