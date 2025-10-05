@@ -88,6 +88,7 @@ export default {
             minute: 'm',
             second: 's'
         },
+        selectSource: 'Select Data Source',
         selectProject: 'Select Project',
         selectStatus: 'Select Status',
         selectVersionPrefix: 'Select Minecraft Version',

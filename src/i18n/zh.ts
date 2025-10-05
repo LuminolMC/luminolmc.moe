@@ -88,6 +88,7 @@ export default {
             minute: '分钟',
             second: '秒'
         },
+        selectSource: '选择数据来源',
         selectProject: '选择项目',
         selectStatus: '选择状态',
         selectVersionPrefix: '选择Minecraft版本',
