@@ -5,6 +5,7 @@ import {useRouter} from 'vue-router'
 import {formatReleaseDate} from '../utils/dateUtils.ts'
 import {NAlert, NButton, NCard, NCode, NLayout, NLayoutContent, NSpin} from 'naive-ui'
 import cacheConfigs from '../config/cacheConfig.ts'
+import {isChinaUser} from "../utils/IPUtils.ts";
 
 const {t} = useI18n()
 const router = useRouter() // 初始化路由
@@ -132,8 +133,22 @@ const useCacheData = (projectName: string) => {
 
 // 从远程缓存获取数据 - 使用缓存配置
 const fetchFromBackupCache = async (projectName: string) => {
-  // 遍历所有缓存配置
-  for (const config of cacheConfigs) {
+  const chinaUser = await isChinaUser();
+
+  // 根据用户位置排序缓存配置
+  const sortedConfigs = [...cacheConfigs].sort((a, b) => {
+    // 对于中国用户，优先使用 cn_primer 字段
+    if (chinaUser) {
+      return a.cn_primer - b.cn_primer;
+    }
+    // 对于其他用户，优先使用 primer 字段
+    else {
+      return a.primer - b.primer;
+    }
+  });
+
+  // 遍历排序后的缓存配置
+  for (const config of sortedConfigs) {
     try {
       // 尝试获取主缓存
       const backupResponse = await fetch(config.url)
@@ -187,6 +202,7 @@ const fetchFromBackupCache = async (projectName: string) => {
   }
   return null
 }
+
 
 // 打开构建查看器页面
 const openBuildViewer = () => {
