@@ -18,7 +18,6 @@ import {
 import {formatReleaseDate} from '../utils/dateUtils.ts'
 import type {CacheConfig} from '../config/cacheConfig.ts'
 import cacheConfigs from '../config/cacheConfig.ts'
-import {isChinaUser} from "../utils/IPUtils.ts";
 
 const {t, locale} = useI18n()
 
@@ -473,151 +472,163 @@ const fetchFromGitHub = async (page: number) => {
 
 // 从备份服务器获取数据
 const fetchFromBackup = async (backupIndex: number, page: number) => {
-  console.log('[fetchFromBackup] Starting to fetch from backup server index:', backupIndex);
+  console.log('[fetchFromBackup] Starting to fetch from backup server index:', backupIndex)
+  const selectedConfig = cacheConfigs[backupIndex]
 
-  // 获取用户地理位置
-  const chinaUser = await isChinaUser();
+  if (!selectedConfig) {
+    console.log('[fetchFromBackup] Invalid backup server index')
+    return
+  }
 
-  // 根据用户位置对缓存配置进行排序
-  const sortedConfigs = [...cacheConfigs].sort((a, b) => {
-    // 对于中国用户，优先使用 cn_primer 字段
-    if (chinaUser) {
-      return a.cn_primer - b.cn_primer;
+  let backupData = null
+  try {
+    console.log('[fetchFromBackup] Attempting to fetch from selected backup cache:', selectedConfig.url)
+    const backupResponse = await fetch(selectedConfig.url)
+    console.log('[fetchFromBackup] Backup cache response status:', backupResponse.status)
+    if (backupResponse.ok) {
+      backupData = await backupResponse.json()
+      console.log('[fetchFromBackup] Successfully fetched backup data, items:', backupData?.length || 0)
+    } else {
+      console.log('[fetchFromBackup] Backup cache request failed, status:', backupResponse.status)
+      // 备用缓存获取失败时使用本地缓存
+      if (useCacheData(page)) {
+        console.log('[fetchFromBackup] Using cached data due to backup cache.')
+        return
+      }
     }
-    // 对于其他用户，优先使用 primer 字段
-    else {
-      return a.primer - b.primer;
-    }
-  });
-
-  // 确定要尝试的配置列表
-  const configsToTry = backupIndex >= 0 ? [sortedConfigs[backupIndex]] : sortedConfigs;
-
-  // 遍历排序后的缓存配置
-  for (const config of configsToTry) {
-    const configIndex = cacheConfigs.indexOf(config);
-    console.log('[fetchFromBackup] Attempting to fetch from backup cache:', config.name || `Backup Server ${configIndex}`);
-
-    // 尝试获取主缓存和旧缓存
-    const urlsToTry = [config.url, config.oldUrl].filter(Boolean) as string[];
-
-    for (const url of urlsToTry) {
-      try {
-        const backupResponse = await fetch(url);
-        console.log(`[fetchFromBackup] Backup cache response status (${url}):`, backupResponse.status);
-
-        if (backupResponse.ok) {
-          const backupData = await backupResponse.json();
-          console.log('[fetchFromBackup] Successfully fetched backup data, items:', backupData?.length || 0);
-
-          if (backupData && Array.isArray(backupData)) {
-            console.log('[fetchFromBackup] Processing backup data');
-            try {
-              const allBuildRecords: BuildRecord[] = backupData.map((item: any) => {
-                // 数据验证
-                if (!item.source_repo || !item.tag_name) {
-                  throw new Error('Invalid item data in backup');
-                }
-
-                // 从source_repo提取项目名
-                const projectName = getProjectNameByRepo(item.source_repo);
-
-                // 从tag_name提取版本信息和commit hash
-                const tagParts = item.tag_name.split('-');
-                const version = item.tag_name;
-                const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : '';
-
-                // 从body中提取分支信息
-                let branch = 'main';
-                const branchMatch = item.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/);
-                if (branchMatch && branchMatch[1]) {
-                  branch = branchMatch[1];
-                }
-
-                // 从body中提取触发者信息
-                let triggerBy = 'Unknown';
-                if (item.body?.includes('automatically compiled by GitHub Actions')) {
-                  triggerBy = 'GitHub Actions';
-                }
-
-                // 从body中提取提交信息
-                const commitMessage = extractCommitMessage(item.body);
-
-                // 从assets中提取下载信息
-                let downloadUrl = '';
-                let downloadCount = 0;
-
-                if (item.assets && item.assets.length > 0) {
-                  const asset = item.assets[0];
-                  downloadUrl = asset.download_url || '';
-                  downloadCount = asset.download_count || 0;
-                }
-
-                // 根据备份数据中的状态字段设置状态
-                let releaseType: 'release' | 'prerelease' = 'release';
-                if (item.releaseType) {
-                  releaseType = item.releaseType;
-                } else if (item.prerelease !== undefined) {
-                  releaseType = item.prerelease ? 'prerelease' : 'release';
-                } else {
-                  // 根据tag名称判断是否为预发布版本
-                  const lowerTagName = item.tag_name.toLowerCase();
-                  if (lowerTagName.includes('beta') ||
-                      lowerTagName.includes('alpha') ||
-                      lowerTagName.includes('rc') ||
-                      lowerTagName.includes('snapshot') ||
-                      lowerTagName.includes('dev')) {
-                    releaseType = 'prerelease';
-                  }
-                }
-
-                return {
-                  id: item.id || Math.floor(Math.random() * 1000000),
-                  projectName: projectName,
-                  version: version,
-                  buildNumber: item.id || Math.floor(Math.random() * 1000000),
-                  releaseType: releaseType,
-                  startTime: item.published_at || new Date().toISOString(),
-                  endTime: item.published_at || new Date().toISOString(),
-                  duration: item.duration || 0,
-                  commitHash: commitHash,
-                  branch: branch,
-                  triggerBy: triggerBy,
-                  commitMessage: commitMessage,
-                  downloadUrl: downloadUrl,
-                  downloadCount: downloadCount,
-                  fromCache: true
-                };
-              });
-
-              console.log('[fetchFromBackup] Processed backup data, total records:', allBuildRecords.length);
-
-              // 保存到本地缓存
-              if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
-                console.log('[fetchFromBackup] Saving backup data to cache');
-                saveToCache(allBuildRecords);
-              }
-
-              processData(allBuildRecords, page, 'backup');
-              console.log('[fetchFromBackup] Successfully processed backup data');
-              return;
-            } catch (dataError) {
-              console.error('[fetchFromBackup] Backup data validation failed:', dataError);
-            }
-          }
+  } catch (e) {
+    console.warn('[fetchFromBackup] Primary backup cache unavailable, trying old backup:', e)
+    try {
+      const oldBackupResponse = await fetch(selectedConfig.oldUrl || '');
+      console.log('[fetchFromBackup] Old backup cache response status:', oldBackupResponse.status)
+      if (oldBackupResponse.ok) {
+        backupData = await oldBackupResponse.json()
+        console.log('[fetchFromBackup] Successfully fetched old backup data, items:', backupData?.length || 0)
+      } else {
+        console.log('[fetchFromBackup] Old backup cache request failed, status:', oldBackupResponse.status)
+        // 旧备用缓存也获取失败时使用本地缓存
+        if (useCacheData(page)) {
+          console.log('[fetchFromBackup] Using cached data due to old backup cache.')
+          return
         }
-      } catch (e) {
-        console.warn(`[fetchFromBackup] Backup cache unavailable (${url}):`, e);
+      }
+    } catch (oldError) {
+      console.warn('[fetchFromBackup] Old backup cache also unavailable:', oldError)
+      // 所有备用方案都失败时使用本地缓存
+      if (useCacheData(page)) {
+        console.log('[fetchFromBackup] Using cached data due to all backup cache.')
+        return
       }
     }
   }
 
-  // 如果所有配置都尝试失败，使用缓存数据
-  if (useCacheData(page)) {
-    console.log('[fetchFromBackup] Using cached data as final fallback');
-    return;
+  if (backupData) {
+    console.log('[fetchFromBackup] Processing backup data')
+    try {
+      // 验证数据格式
+      if (!Array.isArray(backupData)) {
+        throw new Error('Invalid backup data format')
+      }
+
+      const allBuildRecords: BuildRecord[] = backupData.map((item: any) => {
+        // 数据验证和默认值处理
+        if (!item.source_repo || !item.tag_name) {
+          throw new Error('Invalid item data in backup')
+        }
+
+        // 从source_repo提取项目名
+        const projectName = getProjectNameByRepo(item.source_repo)
+
+        // 从tag_name提取版本信息和commit hash
+        const tagParts = item.tag_name.split('-')
+        const version = item.tag_name
+        // 提取提交哈希 (如: 1.21.8-cba8cbd -> cba8cbd)
+        const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : ''
+
+        // 从body中提取分支信息
+        let branch = 'main'
+        const branchMatch = item.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/)
+        if (branchMatch && branchMatch[1]) {
+          branch = branchMatch[1]
+        }
+
+        // 从body中提取触发者信息
+        let triggerBy = 'Unknown'
+        if (item.body?.includes('automatically compiled by GitHub Actions')) {
+          triggerBy = 'GitHub Actions'
+        }
+
+        // 从body中提取提交信息
+        const commitMessage = extractCommitMessage(item.body)
+
+        // 从assets中提取下载信息
+        let downloadUrl = ''
+        let downloadCount = 0
+
+        if (item.assets && item.assets.length > 0) {
+          const asset = item.assets[0] // 使用第一个资产作为下载链接
+          downloadUrl = asset.download_url || ''
+          downloadCount = asset.download_count || 0
+        }
+
+        // 根据备份数据中的状态字段设置状态，如果没有则根据tag名称判断
+        let releaseType: 'release' | 'prerelease' = 'release'
+        if (item.releaseType) {
+          releaseType = item.releaseType
+        } else if (item.prerelease !== undefined) {
+          releaseType = item.prerelease ? 'prerelease' : 'release'
+        } else {
+          // 根据tag名称判断是否为预发布版本
+          const lowerTagName = item.tag_name.toLowerCase()
+          if (lowerTagName.includes('beta') ||
+              lowerTagName.includes('alpha') ||
+              lowerTagName.includes('rc') ||
+              lowerTagName.includes('snapshot') ||
+              lowerTagName.includes('dev')) {
+            releaseType = 'prerelease'
+          }
+        }
+
+        return {
+          id: item.id || Math.floor(Math.random() * 1000000),
+          projectName: projectName,
+          version: version,
+          buildNumber: item.id || Math.floor(Math.random() * 1000000),
+          releaseType: releaseType,
+          startTime: item.published_at || new Date().toISOString(),
+          endTime: item.published_at || new Date().toISOString(),
+          duration: item.duration || 0,
+          commitHash: commitHash,
+          branch: branch,
+          triggerBy: triggerBy,
+          commitMessage: commitMessage,
+          downloadUrl: downloadUrl,
+          downloadCount: downloadCount,
+          fromCache: true // 备份数据标记为来自缓存
+        }
+      })
+
+      console.log('[fetchFromBackup] Processed backup data, total records:', allBuildRecords.length)
+
+      // 保存到本地缓存
+      if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
+        console.log('[fetchFromBackup] Saving backup data to cache')
+        saveToCache(allBuildRecords)
+      }
+
+      processData(allBuildRecords, page, 'backup')
+      console.log('[fetchFromBackup] Successfully processed backup data')
+      return
+    } catch (dataError) {
+      console.error('[fetchFromBackup] Backup data validation failed:', dataError)
+      // 数据异常时使用缓存
+      if (useCacheData(page)) {
+        console.log('[fetchFromBackup] Using cached data due to backup data validation failure')
+        return
+      }
+    }
   }
-};
+}
 
 // 处理数据（包括过滤和分页）
 const processData = (allBuildRecords: BuildRecord[], page: number, source: string) => {
