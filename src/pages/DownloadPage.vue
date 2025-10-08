@@ -24,8 +24,8 @@ const activeProject = ref('luminol')
 
 // 缓存相关常量
 const CACHE_KEY_PREFIX = 'github_releases_'
-const CACHE_DURATION = 15 * 60 * 1000 // 15分钟
-const COOLDOWN_DURATION = 5 * 60 * 1000 // 5分钟冷却期
+const CACHE_DURATION = 30 * 60 * 1000 // 30分钟
+const COOLDOWN_DURATION = 15 * 60 * 1000 // 15分钟冷却期
 let lastErrorTime = 0 // 上次错误时间
 
 // 获取稳定版本

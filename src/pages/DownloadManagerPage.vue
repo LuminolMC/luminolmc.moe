@@ -50,8 +50,8 @@ const defaultSource = ref<string | null>(null)
 
 // 缓存相关
 const CACHE_KEY = 'github_releases_cache'
-const CACHE_DURATION = 15 * 60 * 1000 // 15分钟
-const COOLDOWN_DURATION = 5 * 60 * 1000 // 5分钟冷却期
+const CACHE_DURATION = 30 * 60 * 1000 // 30分钟
+const COOLDOWN_DURATION = 15 * 60 * 1000 // 15分钟冷却期
 let lastErrorTime = 0 // 上次错误时间
 
 // 筛选条件
@@ -262,40 +262,21 @@ const fetchReleases = async (page: number = 1) => {
       }
     }
 
-    let dataFetched = false;
-
     // 根据选择的默认来源决定获取数据的方式
-    if (defaultSource.value === null || defaultSource.value === 'github') {
-      // GitHub API 获取数据
+    if (defaultSource.value === 'github') {
+      // 只从GitHub获取数据
       await fetchFromGitHub(page)
-      // 检查是否成功获取到数据
-      if (builds.value.length > 0) {
-        dataFetched = true;
-      }
-    }
-
-    // 只有在没有从GitHub获取到数据时才尝试备份服务器
-    if (!dataFetched) {
-      if (defaultSource.value === null) {
-        // 遍历所有备份配置，直到成功获取数据为止
-        for (let i = 0; i < cacheConfigs.length; i++) {
-          // 从配置文件指定的服务器获取数据
-          await fetchFromBackup(i, page)
-          // 检查是否成功获取到数据
-          if (builds.value.length > 0) {
-            dataFetched = true;
-            break; // 成功获取数据后退出循环
-          }
-        }
-      } else if (defaultSource.value.startsWith('backup-')) {
-        // 从指定的备份服务器获取数据
-        const backupIndex = parseInt(defaultSource.value.split('-')[1])
-        await fetchFromBackup(backupIndex, page)
-      }
+    } else if (defaultSource.value?.startsWith('backup-')) {
+      // 只从指定备份服务器获取数据
+      const backupIndex = parseInt(defaultSource.value.split('-')[1])
+      await fetchFromBackup(backupIndex, page)
+    } else if (defaultSource.value === null) {
+      // 同时发起所有数据源的请求，哪个先返回就先显示哪个的结果
+      raceDataSources(page)
     }
 
     // 如果所有方法都失败，尝试使用缓存数据
-    if (!dataFetched && useCacheData(page)) {
+    if (builds.value.length === 0 && useCacheData(page)) {
       loading.value = false
       console.log('[fetchReleases] Using cached data as final fallback')
       return
@@ -311,8 +292,37 @@ const fetchReleases = async (page: number = 1) => {
   }
 }
 
+// 竞速模式：同时发起所有数据源的请求，哪个先返回就先显示哪个的结果
+const raceDataSources = async (page: number) => {
+  console.log('[raceDataSources] Starting race between all data sources')
+
+  // 创建一个Promise数组来并行处理所有数据源
+  const fetchPromises: Promise<void>[] = []
+
+  // 添加GitHub数据获取Promise
+  fetchPromises.push(fetchFromGitHub(page, true))
+
+  // 添加备份服务器数据获取Promise
+  for (let i = 0; i < cacheConfigs.length; i++) {
+    fetchPromises.push(fetchFromBackup(i, page, true))
+  }
+
+  // 使用Promise.race让第一个完成的Promise更新界面
+  try {
+    await Promise.race(fetchPromises)
+    console.log('[raceDataSources] First data source completed')
+  } catch (err) {
+    console.error('[raceDataSources] Error in race:', err)
+  }
+
+  // 等待所有Promise完成（在后台继续执行）
+  Promise.allSettled(fetchPromises).then(() => {
+    console.log('[raceDataSources] All data sources completed')
+  })
+}
+
 // 从GitHub获取数据
-const fetchFromGitHub = async (page: number) => {
+const fetchFromGitHub = async (page: number, isParallel: boolean = false) => {
   console.log('[fetchFromGitHub] Starting to fetch GitHub releases for page:', page)
 
   // 根据筛选条件确定要查询的仓库
@@ -448,8 +458,8 @@ const fetchFromGitHub = async (page: number) => {
       saveToCache(allBuildRecords)
     }
 
-    // 处理数据
-    processData(allBuildRecords, page, 'github-api')
+    // 处理数据，优先级最高
+    processData(allBuildRecords, page, 'github-api', true)
     jumpPageInput.value = page.toString() // 同步更新跳转页码输入框
     console.log('[fetchFromGitHub] Completed fetching GitHub releases')
     return
@@ -471,7 +481,7 @@ const fetchFromGitHub = async (page: number) => {
 }
 
 // 从备份服务器获取数据
-const fetchFromBackup = async (backupIndex: number, page: number) => {
+const fetchFromBackup = async (backupIndex: number, page: number, isParallel: boolean = false) => {
   console.log('[fetchFromBackup] Starting to fetch from backup server index:', backupIndex)
   const selectedConfig = cacheConfigs[backupIndex]
 
@@ -491,7 +501,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
     } else {
       console.log('[fetchFromBackup] Backup cache request failed, status:', backupResponse.status)
       // 备用缓存获取失败时使用本地缓存
-      if (useCacheData(page)) {
+      if (!isParallel && useCacheData(page)) {
         console.log('[fetchFromBackup] Using cached data due to backup cache.')
         return
       }
@@ -507,7 +517,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
       } else {
         console.log('[fetchFromBackup] Old backup cache request failed, status:', oldBackupResponse.status)
         // 旧备用缓存也获取失败时使用本地缓存
-        if (useCacheData(page)) {
+        if (!isParallel && useCacheData(page)) {
           console.log('[fetchFromBackup] Using cached data due to old backup cache.')
           return
         }
@@ -515,7 +525,7 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
     } catch (oldError) {
       console.warn('[fetchFromBackup] Old backup cache also unavailable:', oldError)
       // 所有备用方案都失败时使用本地缓存
-      if (useCacheData(page)) {
+      if (!isParallel && useCacheData(page)) {
         console.log('[fetchFromBackup] Using cached data due to all backup cache.')
         return
       }
@@ -616,13 +626,16 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
         saveToCache(allBuildRecords)
       }
 
-      processData(allBuildRecords, page, 'backup')
+      // 只有在非并行模式下或者当前没有数据显示时才处理数据
+      if (!isParallel || builds.value.length === 0) {
+        processData(allBuildRecords, page, 'backup')
+      }
       console.log('[fetchFromBackup] Successfully processed backup data')
       return
     } catch (dataError) {
       console.error('[fetchFromBackup] Backup data validation failed:', dataError)
       // 数据异常时使用缓存
-      if (useCacheData(page)) {
+      if (!isParallel && useCacheData(page)) {
         console.log('[fetchFromBackup] Using cached data due to backup data validation failure')
         return
       }
@@ -631,8 +644,8 @@ const fetchFromBackup = async (backupIndex: number, page: number) => {
 }
 
 // 处理数据（包括过滤和分页）
-const processData = (allBuildRecords: BuildRecord[], page: number, source: string) => {
-  console.log(`[processData] Starting to process data from ${source}, total records:`, allBuildRecords.length, 'page:', page)
+const processData = (allBuildRecords: BuildRecord[], page: number, source: string, isHighPriority: boolean = false) => {
+  console.log(`[processData] Starting to process data from ${source}, total records:`, allBuildRecords.length, 'page:', page, 'isHighPriority:', isHighPriority)
   try {
     // 应用搜索关键词过滤
     if (searchKeyword.value) {
@@ -688,7 +701,16 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
     // 分页处理
     const startIndex = (page - 1) * pageSize.value
     const endIndex = page * pageSize.value
-    builds.value = allBuildRecords.slice(startIndex, endIndex)
+
+    // 如果是高优先级数据（如GitHub）或者当前没有数据显示，则更新数据
+    if (isHighPriority || builds.value.length === 0) {
+      builds.value = allBuildRecords.slice(startIndex, endIndex)
+      console.log('[processData] Updated builds with high priority data or initial data')
+    } else {
+      // 如果已有数据显示且不是高优先级数据，则不更新
+      console.log('[processData] Keeping existing data, new data is not high priority')
+    }
+
     console.log('[processData] Paginated builds, start:', startIndex, 'end:', endIndex, 'result count:', builds.value.length)
 
     // 输出数据来源信息
