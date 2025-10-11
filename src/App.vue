@@ -21,78 +21,42 @@ onMounted(() => {
   changeLanguage(useLanguageStore().language)
 })
 
-const menuOptions: MenuOption[] = [
-  {
-    key: 'home',
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'home',
-              }
-            },
-            {default: () => t('message.home')}
-        ),
-  },
-  {
-    key: 'download',
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'download',
-              }
-            },
-            {default: () => t('message.download')}
-        ),
-  },
-  {
-    key: 'team',
-    label: () =>
-        h(
-            RouterLink,
-            {
-              to: {
-                name: 'team',
-              }
-            },
-            {default: () => t('message.teamNav')}
-        ),
-  },
+const menuConfigs = [
+  { key: 'home', nameKey: 'message.home', route: 'home' },
+  { key: 'download', nameKey: 'message.download', route: 'download' },
+  { key: 'team', nameKey: 'message.teamNav', route: 'team' },
   {
     key: 'luminolcraft',
-    label: () =>
-        h(
-            'a',
-            {
-              href: 'https://craft.luminolsuki.moe/',
-            },
-            t('message.luminolCraft')
-        ),
-    icon: renderIcon(ExternalLink)
+    nameKey: 'message.luminolCraft',
+    externalUrl: 'https://craft.luminolsuki.moe/',
+    icon: ExternalLink
   }
-]
+];
 
-const dropdownOptions: MenuOption[] = [
-  {
-    label: t('message.simplifiedChinese'),
-    props: {
-      onClick: () => {
-        changeLanguage('zh')
+const menuOptions = computed<MenuOption[]>(() =>
+    menuConfigs.map(config => ({
+      key: config.key,
+      label: () => config.externalUrl
+          ? h('a', { href: config.externalUrl, target: '_blank' }, t(config.nameKey))
+          : h(RouterLink, { to: { name: config.route } }, { default: () => t(config.nameKey) }),
+      ...(config.icon && { icon: renderIcon(config.icon) })
+    }))
+);
+
+const languageOptions = [
+  { key: 'zh', labelKey: 'message.simplifiedChinese' },
+  { key: 'en', labelKey: 'message.english' }
+];
+
+const dropdownOptions = computed<MenuOption[]>(() =>
+    languageOptions.map(option => ({
+      label: t(option.labelKey),
+      key: option.key,
+      props: {
+        onClick: () => changeLanguage(option.key)
       }
-    }
-  },
-  {
-    label: t('message.english'),
-    props: {
-      onClick: () => {
-        changeLanguage('en')
-      }
-    }
-  }
-]
+    }))
+);
 
 const route = useRoute()
 const currentRouteName = computed(() => route.name as string)

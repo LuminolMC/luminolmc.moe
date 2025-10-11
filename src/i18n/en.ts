@@ -78,18 +78,19 @@ export default {
         // DownloadManagerPage related translations
         buildViewer: 'Build Viewer',
         buildHistory: 'Build History - Some data may come from the cache',
-        buildStatus: {
-            success: 'Release',
-            failed: 'Unknown',
-            building: 'Pre-release'
+        releaseType: {
+            release: 'Release',
+            prerelease: 'Pre-release'
         },
         time: {
             hour: 'h',
             minute: 'm',
             second: 's'
         },
+        selectSource: 'Select Data Source',
         selectProject: 'Select Project',
         selectStatus: 'Select Status',
+        selectVersionPrefix: 'Select Minecraft Version',
         searchKeyword: 'Search Keyword',
         search: 'Search',
         reset: 'Reset',
@@ -119,8 +120,8 @@ export default {
         simplifiedChinese: '简体中文',
         english: 'English',
         telegram: 'Telegram',
-        locyanNetwork: 'Locyan Network',
-        rainyun: '雨云',
+        locyanNetwork: 'LoCyanTeam',
+        rainyun: 'Rainyun',
         deployOnRainyun: 'Deploy on Rainyun'
     }
 }

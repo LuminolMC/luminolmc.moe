@@ -4,6 +4,7 @@ import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {formatReleaseDate} from '../utils/dateUtils.ts'
 import {NAlert, NButton, NCard, NCode, NLayout, NLayoutContent, NSpin} from 'naive-ui'
+import cacheConfigs from '../config/cacheConfig.ts'
 
 const {t} = useI18n()
 const router = useRouter() // 初始化路由
@@ -23,10 +24,8 @@ const activeProject = ref('luminol')
 
 // 缓存相关常量
 const CACHE_KEY_PREFIX = 'github_releases_'
-const CACHE_DURATION = 15 * 60 * 1000 // 15分钟
-const BACKUP_CACHE_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun/github_releases.json'
-const BACKUP_CACHE_OLD_URL = 'https://luminolmc.buildmanager.api.blue-millennium.fun/github_releases.old.json'
-const COOLDOWN_DURATION = 5 * 60 * 1000 // 5分钟冷却期
+const CACHE_DURATION = 30 * 60 * 1000 // 30分钟
+const COOLDOWN_DURATION = 15 * 60 * 1000 // 15分钟冷却期
 let lastErrorTime = 0 // 上次错误时间
 
 // 获取稳定版本
@@ -131,38 +130,17 @@ const useCacheData = (projectName: string) => {
   return false
 }
 
-// 从远程缓存获取数据
+// 从远程缓存获取数据 - 使用缓存配置
 const fetchFromBackupCache = async (projectName: string) => {
-  try {
-    // 尝试获取主缓存
-    const backupResponse = await fetch(BACKUP_CACHE_URL)
-    if (backupResponse.ok) {
-      const backupData = await backupResponse.json()
-      // 过滤出指定项目的发布信息
-      const projectData = backupData.filter((item: any) =>
-          item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
-      )
-
-      // 转换为Release格式
-      const convertedData: Release[] = projectData.map((item: any) => ({
-        name: item.name || item.tag_name,
-        tag_name: item.tag_name,
-        published_at: item.published_at || new Date().toISOString(),
-        html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
-        prerelease: item.prerelease || false
-      }))
-
-      return convertedData
-    }
-  } catch (e) {
-    console.warn('Primary backup cache unavailable, trying old backup:', e)
+  // 遍历所有缓存配置
+  for (const config of cacheConfigs) {
     try {
-      // 尝试获取旧缓存
-      const oldBackupResponse = await fetch(BACKUP_CACHE_OLD_URL)
-      if (oldBackupResponse.ok) {
-        const oldBackupData = await oldBackupResponse.json()
+      // 尝试获取主缓存
+      const backupResponse = await fetch(config.url)
+      if (backupResponse.ok) {
+        const backupData = await backupResponse.json()
         // 过滤出指定项目的发布信息
-        const projectData = oldBackupData.filter((item: any) =>
+        const projectData = backupData.filter((item: any) =>
             item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
         )
 
@@ -177,8 +155,34 @@ const fetchFromBackupCache = async (projectName: string) => {
 
         return convertedData
       }
-    } catch (oldError) {
-      console.warn('Old backup cache also unavailable:', oldError)
+    } catch (e) {
+      console.warn(`Primary backup cache (${config.name}) unavailable, trying next:`, e)
+      // 如果有配置旧缓存URL，则尝试获取旧缓存
+      if (config.oldUrl) {
+        try {
+          const oldBackupResponse = await fetch(config.oldUrl)
+          if (oldBackupResponse.ok) {
+            const oldBackupData = await oldBackupResponse.json()
+            // 过滤出指定项目的发布信息
+            const projectData = oldBackupData.filter((item: any) =>
+                item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
+            )
+
+            // 转换为Release格式
+            const convertedData: Release[] = projectData.map((item: any) => ({
+              name: item.name || item.tag_name,
+              tag_name: item.tag_name,
+              published_at: item.published_at || new Date().toISOString(),
+              html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
+              prerelease: item.prerelease || false
+            }))
+
+            return convertedData
+          }
+        } catch (oldError) {
+          console.warn(`Old backup cache (${config.name}) also unavailable:`, oldError)
+        }
+      }
     }
   }
   return null
