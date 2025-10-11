@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { NAlert, NAvatar, NButton, NH2, NSpin, NText } from "naive-ui";
+import { NAvatar, NButton, NH2, NText } from "naive-ui";
 import { useI18n } from "vue-i18n";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useGitHubContributors } from "../services/github";
-import { team ,type Role, type Contributor } from "../data/teamMember";
+import { team  } from "../data/teamMember";
 import GithubIcon from "../assets/GithubIcon.vue";
 
 const { t, locale } = useI18n();
@@ -112,7 +111,7 @@ onUnmounted(() => {
             <article v-for="member in role.members" :key="member.github" class="contributor-card">
               <div class="contributor-layout">
                 <div class="contributor-avatar-container">
-                  <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="80"
+                  <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="avatarSize"
                     :src="member.avatar" class="contributor-avatar" />
                 </div>
                 <div class="contributor-info">
