@@ -1,55 +1,40 @@
 <script lang="ts" setup>
-import {NAlert, NAvatar, NButton, NH2, NSpin, NText} from "naive-ui";
-import {useI18n} from 'vue-i18n'
-import {computed, onMounted, onUnmounted, ref} from 'vue'
-import {useGitHubContributors} from "../services/github";
-import {coreContributors} from "../data/coreContributors";
+import { NAlert, NAvatar, NButton, NH2, NSpin, NText } from "naive-ui";
+import { useI18n } from "vue-i18n";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useGitHubContributors } from "../services/github";
+import { team ,type Role, type Contributor } from "../data/teamMember";
+import GithubIcon from "../assets/GithubIcon.vue";
 
-const {t, locale} = useI18n()
-const {contributors, isLoading, error, fetchContributors} = useGitHubContributors()
+const { t, locale } = useI18n();
+
 const goTo = (path: string) => {
-  window.open(path, '_blank')
-}
-
-
-// 使用手动配置的核心贡献者
-const manualCoreContributors = computed(() => coreContributors)
-
-// 所有贡献者（排除手动配置的核心贡献者）
-const allContributors = computed(() => {
-  const coreUsernames = coreContributors.map(c => c.github)
-  return contributors.value.filter(c => !coreUsernames.includes(c.login))
-})
-
-const getContributorRole = (contributor: any) => {
-  const currentLocale = locale.value as 'zh' | 'en'
-  return contributor.role[currentLocale] || contributor.role.en
-}
+  window.open(path, "_blank");
+};
 
 // 响应式头像大小
-const windowWidth = ref(window.innerWidth)
+const windowWidth = ref(window.innerWidth);
 const avatarSize = computed(() => {
-  if (windowWidth.value >= 1920) return 50
-  if (windowWidth.value <= 480) return 36
-  if (windowWidth.value <= 768) return 40
-  if (windowWidth.value <= 1200) return 44
-  return 48
-})
+  if (windowWidth.value >= 1920) return 50;
+  if (windowWidth.value <= 480) return 36;
+  if (windowWidth.value <= 768) return 40;
+  if (windowWidth.value <= 1200) return 44;
+  return 48;
+});
 
 // 监听窗口大小变化
 const updateWindowWidth = () => {
-  windowWidth.value = window.innerWidth
-}
+  windowWidth.value = window.innerWidth;
+};
 
 onMounted(() => {
-  fetchContributors()
-  window.addEventListener('resize', updateWindowWidth)
-})
+  window.addEventListener("resize", updateWindowWidth);
+});
 
 // 清理事件监听器
 onUnmounted(() => {
-  window.removeEventListener('resize', updateWindowWidth)
-})
+  window.removeEventListener("resize", updateWindowWidth);
+});
 </script>
 
 <template>
@@ -58,23 +43,14 @@ onUnmounted(() => {
     <header class="hero">
       <div class="hero-content">
         <div class="hero-text">
-          <h1 class="hero-title">{{ t('message.teamTitle') }}</h1>
-          <p class="hero-description">{{ t('message.teamIntroduction') }}</p>
+          <h1 class="hero-title">{{ t("message.teamTitle") }}</h1>
+          <p class="hero-description">{{ t("message.teamIntroduction") }}</p>
           <div class="hero-buttons">
-            <NButton
-                size="large"
-                type="primary"
-                @click="goTo('https://afdian.com/a/Luminol')"
-            >
-              {{ t('message.sponsorUs') }}
+            <NButton size="large" type="primary" @click="goTo('https://afdian.com/a/Luminol')">
+              {{ t("message.sponsorUs") }}
             </NButton>
-            <NButton
-                secondary
-                size="large"
-                strong
-                @click="goTo('https://github.com/LuminolMC')"
-            >
-              {{ t('message.github_upper_case') }}
+            <NButton secondary size="large" strong @click="goTo('https://github.com/LuminolMC')">
+              {{ t("message.github_upper_case") }}
             </NButton>
           </div>
         </div>
@@ -83,57 +59,35 @@ onUnmounted(() => {
 
     <!-- Contributors Sections -->
     <div class="team-sections">
-
-      <!-- Major Contributors Section -->
-      <section class="team-section">
+      <!-- Core Development Section -->
+      <!-- <section class="team-section">
         <div class="section-header">
           <NH2 class="section-title">
-            {{ t('message.team.majorContributors') }}
+            {{ t("message.team.coreDev") }}
           </NH2>
           <NText class="section-description">
-            {{ t('message.team.majorContributorsDesc') }}
+            {{ t("message.team.coreDevDesc") }}
           </NText>
         </div>
 
-        <div v-if="isLoading" class="loading-container">
-          <NSpin size="large">
-            <NText>{{ t('message.team.loading') }}</NText>
-          </NSpin>
-        </div>
-
-        <NAlert v-else-if="error" class="error-alert" type="error">
-          {{ t('message.team.error') }}: {{ error }}
-        </NAlert>
-
         <div class="contributors-flex">
-          <article
-              v-for="contributor in manualCoreContributors"
-              :key="contributor.github"
-              class="contributor-card"
-              @click="goTo(`https://github.com/${contributor.github}`)"
-          >
+          <article v-for="contributor in manualCoreContributors" :key="contributor.github" class="contributor-card"
+            @click="goTo(`https://github.com/${contributor.github}`)">
             <div class="contributor-layout">
               <div class="contributor-avatar-container">
-                <NAvatar
-                    :fallback-src="`https://github.com/${contributor.github}.png`"
-                    :size="80"
-                    :src="contributor.avatar"
-                    class="contributor-avatar"
-                />
+                <NAvatar :fallback-src="`https://github.com/${contributor.github}.png`" :size="80"
+                  :src="contributor.avatar" class="contributor-avatar" />
               </div>
               <div class="contributor-info">
                 <div class="contributor-name">{{ contributor.name }}</div>
-                <div class="contributor-role">{{ getContributorRole(contributor) }}</div>
-                <a
-                    :href="`https://github.com/${contributor.github}`"
-                    class="contributor-github-link"
-                    rel="noreferrer"
-                    target="_blank"
-                    @click.stop
-                >
+                <div class="contributor-role">
+                  {{ getContributorRole(contributor) }}
+                </div>
+                <a :href="`https://github.com/${contributor.github}`" class="contributor-github-link" rel="noreferrer"
+                  target="_blank" @click.stop>
                   <svg class="github-icon" fill="currentColor" viewBox="0 0 24 24">
                     <path
-                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                   </svg>
                   {{ contributor.github }}
                 </a>
@@ -141,42 +95,77 @@ onUnmounted(() => {
             </div>
           </article>
         </div>
+      </section> -->
+
+      <section class="team-section">
+        <div v-for="role in team">
+          <div class="section-header">
+            <NH2 class="section-title">
+              {{ role.title[locale as 'zh' | 'en'] || role.title.en }}
+            </NH2>
+            <NText class="section-description">
+              {{ role.description[locale as 'zh' | 'en'] || role.description.en }}
+            </NText>
+          </div>
+
+          <div class="contributors-flex">
+            <article v-for="member in role.members" :key="member.github" class="contributor-card">
+              <div class="contributor-layout">
+                <div class="contributor-avatar-container">
+                  <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="80"
+                    :src="member.avatar" class="contributor-avatar" />
+                </div>
+                <div class="contributor-info">
+                  <div class="contributor-name">{{ member.name }}</div>
+                  <div class="contributor-role">
+                    {{  member.description[locale as 'zh' | 'en'] || member.description.en  }}
+                  </div>
+                  <a :href="`https://github.com/${member.github}`" class="contributor-github-link" rel="noreferrer"
+                    target="_blank" @click.stop>
+                    <GithubIcon class="github-icon" :size="16" :color="'#18a058'"/>
+                    {{ member.github }}
+                  </a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
       </section>
 
       <!-- All Contributors Section -->
-      <section class="team-section">
+      <!-- <section class="team-section">
         <div class="section-header">
           <NH2 class="section-title">
-            {{ t('message.team.allContributors') }}
+            {{ t("message.team.contributors") }}
           </NH2>
           <NText class="section-description">
-            {{ t('message.team.allContributorsDesc') }}
+            {{ t("message.team.contributorsDesc") }}
           </NText>
         </div>
 
         <div v-if="isLoading" class="loading-container">
           <NSpin size="large">
-            <NText>{{ t('message.team.loading') }}</NText>
+            <NText>{{ t("message.team.loading") }}</NText>
           </NSpin>
         </div>
 
         <div v-else-if="allContributors.length > 0" class="minor-contributors-flex">
-          <div
-              v-for="contributor in allContributors"
-              :key="contributor.id"
-              :title="`${contributor.login} - ${contributor.contributions}${t('message.team.contributions')}`"
-              class="minor-contributor"
-              @click="goTo(contributor.html_url)"
-          >
-            <NAvatar
-                :fallback-src="`https://github.com/${contributor.login}.png`"
-                :size="avatarSize"
-                :src="contributor.avatar_url"
-                class="minor-contributor-avatar"
-            />
+          <div v-for="contributor in allContributors" :key="contributor.id" :title="`${contributor.login} - ${contributor.contributions}${t(
+            'message.team.contributions'
+          )}`" class="minor-contributor" @click="goTo(contributor.html_url)">
+            <NAvatar :fallback-src="`https://github.com/${contributor.login}.png`" :size="avatarSize"
+              :src="contributor.avatar_url" class="minor-contributor-avatar" />
           </div>
         </div>
       </section>
+      <div v-if="isLoading" class="loading-container">
+        <NSpin size="large">
+          <NText>{{ t("message.team.loading") }}</NText>
+        </NSpin>
+      </div>
+      <NAlert v-else-if="error" class="error-alert" type="error">
+        {{ t("message.team.error") }}: {{ error }}
+      </NAlert> -->
     </div>
   </div>
 </template>
@@ -240,6 +229,7 @@ onUnmounted(() => {
 }
 
 .section-header {
+  text-align: left;
   margin-bottom: 2rem;
 }
 
@@ -353,7 +343,7 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   margin-top: 2rem;
-  justify-content: center;
+  justify-content: left;
 }
 
 /* Contributors Flex 响应式布局 */
@@ -422,6 +412,7 @@ onUnmounted(() => {
 }
 
 .contributor-info {
+  text-align: left;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -439,7 +430,6 @@ onUnmounted(() => {
 .contributor-role {
   font-size: 0.9rem;
   color: var(--n-text-color-2);
-  font-style: italic;
   margin-bottom: 0.25rem;
   line-height: 1.4;
 }
@@ -458,12 +448,6 @@ onUnmounted(() => {
 
 .contributor-github-link:hover {
   color: #36ad6a;
-}
-
-.github-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
 }
 
 /* Contributor Card 响应式 */
@@ -523,7 +507,6 @@ onUnmounted(() => {
   margin: 6px;
 }
 
-
 @media (min-width: 1920px) {
   .minor-contributors-flex .minor-contributor {
     margin: 5px;
@@ -531,7 +514,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1200px) {
-
   .minor-contributors-flex .minor-contributor {
     margin: 5px;
   }
@@ -545,7 +527,6 @@ onUnmounted(() => {
   .minor-contributors-flex .minor-contributor {
     margin: 4px;
   }
-
 }
 
 @media (max-width: 480px) {
@@ -556,7 +537,6 @@ onUnmounted(() => {
   .minor-contributors-flex .minor-contributor {
     margin: 3px;
   }
-
 }
 
 .minor-contributor {
@@ -581,7 +561,6 @@ onUnmounted(() => {
 .minor-contributor:hover .minor-contributor-avatar {
   border-color: var(--n-primary-color);
 }
-
 
 @media (max-width: 768px) {
   .hero {

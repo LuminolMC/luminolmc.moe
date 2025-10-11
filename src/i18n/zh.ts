@@ -67,10 +67,10 @@ export default {
         disclaimer: '本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。所有产品和公司名称均为其各自持有者的商标或注册商标。使用这些名称并不意味着它们的任何关联或认可。',
         language: '选择语言',
         team: {
-            majorContributors: '核心贡献者',
-            majorContributorsDesc: '项目的主要开发者',
-            allContributors: '贡献者',
-            allContributorsDesc: '参与项目开发的所有开发者',
+            coreDev: '核心开发者',
+            coreDevDesc: '项目的核心开发者，软件的大部分功能由他们实现，负责项目的整体方向和主要决策。',
+            contributors: '贡献者',
+            contributorsDesc: '参与项目开发的所有开发者',
             contributions: '次提交',
             loading: '加载中...',
             error: '加载失败'
