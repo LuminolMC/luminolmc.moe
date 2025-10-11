@@ -111,7 +111,7 @@ onUnmounted(() => {
             <article v-for="member in role.members" :key="member.github" class="contributor-card">
               <div class="contributor-layout">
                 <div class="contributor-avatar-container">
-                  <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="avatarSize"
+                  <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="80"
                     :src="member.avatar" class="contributor-avatar" />
                 </div>
                 <div class="contributor-info">
