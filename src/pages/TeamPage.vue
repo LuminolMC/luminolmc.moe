@@ -13,13 +13,6 @@ const goTo = (path: string) => {
 
 // 响应式头像大小
 const windowWidth = ref(window.innerWidth);
-const avatarSize = computed(() => {
-  if (windowWidth.value >= 1920) return 50;
-  if (windowWidth.value <= 480) return 36;
-  if (windowWidth.value <= 768) return 40;
-  if (windowWidth.value <= 1200) return 44;
-  return 48;
-});
 
 // 监听窗口大小变化
 const updateWindowWidth = () => {
