@@ -40,13 +40,14 @@ interface BuildRecord {
 }
 
 const builds = ref<BuildRecord[]>([])
-const loading = ref(true)
+const loading = ref<boolean>(true)
 const error = ref<string | null>(null)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalBuilds = ref(0)
+const currentPage = ref<number>(1)
+const pageSize = ref<number>(10)
+const totalBuilds = ref<number>(0)
 const jumpPageInput = ref<string>('')
 const defaultSource = ref<string | null>(null)
+const jumpPageError = ref<string | null>(null)
 
 // 缓存相关
 const CACHE_KEY = 'github_releases_cache'
@@ -58,7 +59,7 @@ let lastErrorTime = 0 // 上次错误时间
 const filterProject = ref<string | null>(null)
 const filterReleaseType = ref<string | null>(null)
 const filterVersionPrefix = ref<string | null>(null)
-const searchKeyword = ref('')
+const searchKeyword = ref<string>('')
 
 // 计算总页数
 const totalPages = computed(() => Math.ceil(totalBuilds.value / pageSize.value))
@@ -272,7 +273,7 @@ const fetchReleases = async (page: number = 1) => {
       await fetchFromBackup(backupIndex, page)
     } else if (defaultSource.value === null) {
       // 同时发起所有数据源的请求，哪个先返回就先显示哪个的结果
-      raceDataSources(page)
+      await raceDataSources(page)
     }
 
     // 如果所有方法都失败，尝试使用缓存数据
@@ -322,11 +323,11 @@ const raceDataSources = async (page: number) => {
 }
 
 // 从GitHub获取数据
-const fetchFromGitHub = async (page: number, isParallel: boolean = false) => {
+const fetchFromGitHub = async (page: number, init: boolean = false) => {
   console.log('[fetchFromGitHub] Starting to fetch GitHub releases for page:', page)
 
   // 根据筛选条件确定要查询的仓库
-  let reposToQuery: string[] = []
+  let reposToQuery: string[]
   if (filterProject.value && repositoryMap[filterProject.value]) {
     reposToQuery = [repositoryMap[filterProject.value]]
     console.log('[fetchFromGitHub] Filtering by project:', filterProject.value)
@@ -411,6 +412,15 @@ const fetchFromGitHub = async (page: number, isParallel: boolean = false) => {
           // 从release body中提取commit message
           const commitMessage = extractCommitMessage(release.body || '');
 
+          // 从release body中提取分支信息
+          let branch = 'main';
+          const branchMatch = release.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/);
+          if (branchMatch && branchMatch[1]) {
+            branch = branchMatch[1];
+          } else if (release.target_commitish) {
+            branch = release.target_commitish;
+          }
+
           return {
             id: release.id,
             projectName: projectName,
@@ -421,7 +431,7 @@ const fetchFromGitHub = async (page: number, isParallel: boolean = false) => {
             endTime: release.published_at,
             duration: 0,
             commitHash: commitHash,
-            branch: release.target_commitish || 'main',
+            branch: branch,
             triggerBy: release.author?.login || 'Unknown',
             commitMessage: commitMessage, // 使用提取的commit message
             downloadUrl: downloadUrl,
@@ -459,8 +469,8 @@ const fetchFromGitHub = async (page: number, isParallel: boolean = false) => {
     }
 
     // 处理数据，优先级最高
-    processData(allBuildRecords, page, 'github-api', true)
-    jumpPageInput.value = page.toString() // 同步更新跳转页码输入框
+    processData(allBuildRecords, page, 'github-api', true, init)
+    jumpPageInput.value = ""
     console.log('[fetchFromGitHub] Completed fetching GitHub releases')
     return
   }
@@ -644,7 +654,7 @@ const fetchFromBackup = async (backupIndex: number, page: number, isParallel: bo
 }
 
 // 处理数据（包括过滤和分页）
-const processData = (allBuildRecords: BuildRecord[], page: number, source: string, isHighPriority: boolean = false) => {
+const processData = (allBuildRecords: BuildRecord[], page: number, source: string, isHighPriority: boolean = false, init: boolean = false) => {
   console.log(`[processData] Starting to process data from ${source}, total records:`, allBuildRecords.length, 'page:', page, 'isHighPriority:', isHighPriority)
   try {
     // 应用搜索关键词过滤
@@ -702,10 +712,10 @@ const processData = (allBuildRecords: BuildRecord[], page: number, source: strin
     const startIndex = (page - 1) * pageSize.value
     const endIndex = page * pageSize.value
 
-    // 如果是高优先级数据（如GitHub）或者当前没有数据显示，则更新数据
-    if (isHighPriority || builds.value.length === 0) {
+    // 如果是高优先级数据（如GitHub），正在翻页或者当前没有数据显示，则更新数据
+    if (!init || isHighPriority || builds.value.length === 0 || page !== currentPage.value) {
       builds.value = allBuildRecords.slice(startIndex, endIndex)
-      console.log('[processData] Updated builds with high priority data or initial data')
+      console.log('[processData] Updated builds with high priority data or page change')
     } else {
       // 如果已有数据显示且不是高优先级数据，则不更新
       console.log('[processData] Keeping existing data, new data is not high priority')
@@ -807,8 +817,7 @@ const formatReleaseDateTimeLines = (dateString: string) => {
     const timeAndTimezone = parts[1]
 
     // 分离时间和时区
-    let timePart = ''
-    let timezonePart = ''
+    let timePart, timezonePart
 
     if (timeAndTimezone.includes('Z')) {
       [timePart] = timeAndTimezone.split('Z')
@@ -881,7 +890,7 @@ const pageSizeOptions = computed(() => [
 const handlePageChange = (page: number) => {
   console.log('[handlePageChange] Page changed to:', page)
   currentPage.value = page
-  jumpPageInput.value = page.toString() // 同步更新跳转页码输入框
+  jumpPageInput.value = ""
   fetchReleases(page)
 }
 
@@ -890,7 +899,7 @@ const handlePageSizeChange = (size: number) => {
   console.log('[handlePageSizeChange] Page size changed to:', size)
   pageSize.value = size
   currentPage.value = 1
-  jumpPageInput.value = '1' // 重置跳转页码输入框
+  jumpPageInput.value = ''
   fetchReleases()
 }
 
@@ -917,7 +926,7 @@ const downloadBuild = (build: BuildRecord) => {
 const performSearch = () => {
   console.log('[performSearch] Performing search with keyword:', searchKeyword.value)
   currentPage.value = 1
-  jumpPageInput.value = '1' // 重置跳转页码输入框
+  jumpPageInput.value = ''
   fetchReleases()
 }
 
@@ -929,14 +938,21 @@ const resetFilters = () => {
   filterVersionPrefix.value = null
   searchKeyword.value = ''
   currentPage.value = 1
-  jumpPageInput.value = '1' // 重置跳转页码输入框
+  jumpPageInput.value = ''
   fetchReleases()
 }
 
-// 清除缓存函数
+// 清除缓存并重新获取数据
 const clearCache = () => {
-  console.log('[clearCache] Clearing cache')
-  localStorage.removeItem(CACHE_KEY)
+  console.log('[clearCache] Clearing all local storage')
+  localStorage.clear()
+  // 重置相关状态
+  builds.value = []
+  currentPage.value = 1
+  jumpPageInput.value = ''
+  totalBuilds.value = 0
+  // 重新获取数据
+  fetchReleases()
 }
 
 // 添加跳转到指定页的处理函数
@@ -946,11 +962,14 @@ const handleJumpPage = () => {
   console.log('[handleJumpPage] Jumping to page:', pageNum, 'max page:', maxPage)
 
   if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPage) {
+    jumpPageError.value = null  // 清除错误信息
     currentPage.value = pageNum
     fetchReleases(pageNum)
   } else {
-    // 如果输入的页码无效，重置为当前页码
-    jumpPageInput.value = currentPage.value.toString()
+    jumpPageError.value = t('message.invalidPageNumber', {
+      min: 1,
+      max: maxPage
+    })
   }
 }
 
@@ -1024,7 +1043,7 @@ const stopResizing = () => {
 onMounted(() => {
   console.log('[onMounted] Component mounted, starting initial fetch')
   fetchReleases()
-  jumpPageInput.value = '1' // 初始化跳转页码输入框
+  jumpPageInput.value = ''
   document.addEventListener('mousemove', resizeColumn)
   document.addEventListener('mouseup', stopResizing)
   console.log('[onMounted] Event listeners added')
@@ -1252,6 +1271,10 @@ onBeforeUnmount(() => {
                   {{ t('message.go') }}
                 </NButton>
                 <span>/ {{ totalPages }} {{ t('message.page') }}</span>
+                <!-- 添加错误信息显示 -->
+                <div v-if="jumpPageError" style="color: #f56c6c; font-size: 12px; margin-left: 10px;">
+                  {{ jumpPageError }}
+                </div>
               </div>
             </div>
           </div>

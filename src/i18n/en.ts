@@ -115,6 +115,8 @@ export default {
         page: 'page',
         goToPage: 'Go to Page',
         go: 'Go',
+        invalidPageNumber: "Please enter a valid page number ({min}-{max})",
+        usingCachedDataDueToError: 'Using cached data due to error',
         // App.vue related translations
         luminolCraft: 'LuminolCraft',
         simplifiedChinese: '简体中文',

@@ -115,6 +115,8 @@ export default {
         page: '页',
         goToPage: '跳转至',
         go: '跳转',
+        invalidPageNumber: "请输入有效的页码（{min}-{max}）",
+        usingCachedDataDueToError: '由于错误，正在使用缓存数据',
         dataFromCache: '数据来自缓存',
         realTimeData: '实时数据',
         noDownloadAvailable: '无下载链接',
