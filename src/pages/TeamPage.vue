@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { NAvatar, NButton, NH2, NText } from "naive-ui";
-import { useI18n } from "vue-i18n";
-import { computed, onMounted, onUnmounted, ref } from "vue";
-import { team  } from "../data/teamMember";
+import {NAvatar, NButton, NH2, NText} from "naive-ui";
+import {useI18n} from "vue-i18n";
+import {onMounted, onUnmounted, ref} from "vue";
+import {team} from "../data/teamMember";
 import GithubIcon from "../assets/GithubIcon.vue";
 
-const { t, locale } = useI18n();
+const {t, locale} = useI18n();
 
 const goTo = (path: string) => {
   window.open(path, "_blank");
@@ -105,15 +105,15 @@ onUnmounted(() => {
               <div class="contributor-layout">
                 <div class="contributor-avatar-container">
                   <NAvatar :fallback-src="`https://github.com/${member.github}.png`" :size="80"
-                    :src="member.avatar" class="contributor-avatar" />
+                           :src="member.avatar" class="contributor-avatar"/>
                 </div>
                 <div class="contributor-info">
                   <div class="contributor-name">{{ member.name }}</div>
                   <div class="contributor-role">
-                    {{  member.description[locale as 'zh' | 'en'] || member.description.en  }}
+                    {{ member.description[locale as 'zh' | 'en'] || member.description.en }}
                   </div>
                   <a :href="`https://github.com/${member.github}`" class="contributor-github-link" rel="noreferrer"
-                    target="_blank" @click.stop>
+                     target="_blank" @click.stop>
                     <GithubIcon class="github-icon" :size="16" :color="'#18a058'"/>
                     {{ member.github }}
                   </a>

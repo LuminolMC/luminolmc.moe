@@ -22,9 +22,9 @@ onMounted(() => {
 })
 
 const menuConfigs = [
-  { key: 'home', nameKey: 'message.home', route: 'home' },
-  { key: 'download', nameKey: 'message.download', route: 'download' },
-  { key: 'team', nameKey: 'message.teamNav', route: 'team' },
+  {key: 'home', nameKey: 'message.home', route: 'home'},
+  {key: 'download', nameKey: 'message.download', route: 'download'},
+  {key: 'team', nameKey: 'message.teamNav', route: 'team'},
   {
     key: 'luminolcraft',
     nameKey: 'message.luminolCraft',
@@ -37,15 +37,15 @@ const menuOptions = computed<MenuOption[]>(() =>
     menuConfigs.map(config => ({
       key: config.key,
       label: () => config.externalUrl
-          ? h('a', { href: config.externalUrl, target: '_blank' }, t(config.nameKey))
-          : h(RouterLink, { to: { name: config.route } }, { default: () => t(config.nameKey) }),
-      ...(config.icon && { icon: renderIcon(config.icon) })
+          ? h('a', {href: config.externalUrl, target: '_blank'}, t(config.nameKey))
+          : h(RouterLink, {to: {name: config.route}}, {default: () => t(config.nameKey)}),
+      ...(config.icon && {icon: renderIcon(config.icon)})
     }))
 );
 
 const languageOptions = [
-  { key: 'zh', labelKey: 'message.simplifiedChinese' },
-  { key: 'en', labelKey: 'message.english' }
+  {key: 'zh', labelKey: 'message.simplifiedChinese'},
+  {key: 'en', labelKey: 'message.english'}
 ];
 
 const dropdownOptions = computed<MenuOption[]>(() =>
