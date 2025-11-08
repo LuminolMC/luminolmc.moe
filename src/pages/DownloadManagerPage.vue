@@ -15,7 +15,7 @@ import {
   NTag,
   NTooltip
 } from 'naive-ui'
-import {formatReleaseDate} from '../utils/dateUtils.ts'
+import {formatDate} from '../utils/dateUtils.ts'
 import type {CacheConfig} from '../config/cacheConfig.ts'
 import cacheConfigs from '../config/cacheConfig.ts'
 
@@ -1193,7 +1193,7 @@ onBeforeUnmount(() => {
                           </div>
                         </div>
                       </template>
-                      {{ formatReleaseDate(build.startTime) }}
+                      {{ formatDate(build.startTime) }}
                     </NTooltip>
                   </td>
                   <td>

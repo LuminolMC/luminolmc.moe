@@ -2,7 +2,7 @@
 import {useI18n} from 'vue-i18n'
 import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {formatReleaseDate} from '../utils/dateUtils.ts'
+import {formatDate} from '../utils/dateUtils.ts'
 import {NAlert, NButton, NCard, NCode, NLayout, NLayoutContent, NSpin} from 'naive-ui'
 import cacheConfigs from '../config/cacheConfig.ts'
 
@@ -383,7 +383,7 @@ onMounted(() => {
                 </a>
               </p>
               <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{
-                  formatReleaseDate(release.published_at)
+                  formatDate(release.published_at)
                 }}</p>
               <NButton size="large" style="width: 100%;" type="primary" @click="openReleaseUrl(release.html_url)">
                 {{ t('message.downloadStable') }}
@@ -409,7 +409,7 @@ onMounted(() => {
                 </a>
               </p>
               <p style="margin-bottom: 30px;">{{ t('message.releaseDate') }}: {{
-                  formatReleaseDate(release.published_at)
+                  formatDate(release.published_at)
                 }}</p>
               <NButton size="large" style="width: 100%;" type="warning" @click="openReleaseUrl(release.html_url)">
                 {{ t('message.downloadDev') }}
