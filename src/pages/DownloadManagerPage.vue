@@ -147,6 +147,7 @@ const sourceOptions = computed(() => {
 
   // 添加配置文件中的服务器组
   cacheConfigs.forEach((config: CacheConfig, index: number) => {
+    if (config.disabled) return
     options.push({
       label: config.name || `Backup Server ${index + 1}`,
       value: `backup-${index}`
@@ -494,6 +495,8 @@ const fetchFromGitHub = async (page: number, init: boolean = false) => {
 const fetchFromBackup = async (backupIndex: number, page: number, isParallel: boolean = false) => {
   console.log('[fetchFromBackup] Starting to fetch from backup server index:', backupIndex)
   const selectedConfig = cacheConfigs[backupIndex]
+
+  if (selectedConfig.disabled) return
 
   if (!selectedConfig) {
     console.log('[fetchFromBackup] Invalid backup server index')

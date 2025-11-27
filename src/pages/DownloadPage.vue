@@ -134,6 +134,7 @@ const useCacheData = (projectName: string) => {
 const fetchFromBackupCache = async (projectName: string) => {
   // 遍历所有缓存配置
   for (const config of cacheConfigs) {
+    if (config.disabled) continue
     try {
       // 尝试获取主缓存
       const backupResponse = await fetch(config.url)

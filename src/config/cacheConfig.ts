@@ -2,6 +2,7 @@ export interface CacheConfig {
     name: string;
     url: string;
     oldUrl?: string;
+    disabled?: boolean;
 }
 
 const cacheConfigs: CacheConfig[] = [
@@ -18,7 +19,8 @@ const cacheConfigs: CacheConfig[] = [
     {
         name: 'Cache_Swiss',
         url: 'https://api.xiamohuahuo.love/github_releases.json',
-        oldUrl: 'https://api.xiamohuahuo.love/github_releases.old.json'
+        oldUrl: 'https://api.xiamohuahuo.love/github_releases.old.json',
+        disabled: true
     }
 ];
 
