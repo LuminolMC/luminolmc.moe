@@ -18,9 +18,8 @@ const cacheConfigs: CacheConfig[] = [
     },
     {
         name: 'Cache_Swiss',
-        url: 'https://api.xiamohuahuo.love/github_releases.json',
-        oldUrl: 'https://api.xiamohuahuo.love/github_releases.old.json',
-        disabled: true
+        url: 'https://nnnn.baby/github_releases.json',
+        oldUrl: 'https://nnnn.baby/github_releases.old.json'
     }
 ];
 
