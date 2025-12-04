@@ -18,9 +18,27 @@ import {
 import {formatDate} from '../utils/dateUtils.ts'
 import type {CacheConfig} from '../config/cacheConfig.ts'
 import cacheConfigs from '../config/cacheConfig.ts'
-import cacheManager, {type BuildRecord} from '../utils/cacheManager/cacheManager.ts'
+import possibleApiStructures from '../config/possibleApiStructure.ts'
 
 const {t, locale} = useI18n()
+
+interface BuildRecord {
+  id: number
+  projectName: string
+  version: string
+  buildNumber: number
+  releaseType: 'release' | 'prerelease'
+  startTime: string
+  endTime: string
+  duration: number // in seconds
+  commitHash: string
+  branch: string
+  triggerBy: string
+  commitMessage: string
+  downloadUrl?: string
+  downloadCount?: number
+  fromCache?: boolean
+}
 
 const builds = ref<BuildRecord[]>([])
 const loading = ref<boolean>(true)
@@ -34,6 +52,9 @@ const jumpPageError = ref<string | null>(null)
 
 // 缓存相关
 const CACHE_KEY = 'github_releases_cache'
+const CACHE_DURATION = 30 * 60 * 1000 // 30分钟
+const COOLDOWN_DURATION = 15 * 60 * 1000 // 15分钟冷却期
+let lastErrorTime = 0 // 上次错误时间
 
 // 筛选条件
 const filterProject = ref<string | null>(null)
@@ -84,7 +105,7 @@ const releaseTypeOptions = [
 // 版本前缀选项（从所有数据中提取）
 const versionPrefixOptions = computed(() => {
   // 从缓存中获取所有数据以构建完整的选项列表
-  const allData = cacheManager.getCachedData<BuildRecord[]>(CACHE_KEY) || builds.value
+  const allData = getCachedData() || builds.value
   const prefixes = new Set<string>()
 
   allData.forEach((build: BuildRecord) => {
@@ -145,10 +166,61 @@ const getProjectNameByRepo = (repo: string) => {
   ) || repo.split('/')[1]
 }
 
+// 检查缓存是否有效
+const isCacheValid = (cachedData: any) => {
+  console.log('[isCacheValid] Checking cache validity')
+  if (!cachedData) return false
+  const now = Date.now()
+  return (now - cachedData.timestamp) < CACHE_DURATION
+}
+
+// 从缓存获取数据
+const getCachedData = () => {
+  console.log('[getCachedData] Attempting to retrieve data from cache')
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (isCacheValid(parsed)) {
+        console.log('[getCachedData] Returning valid cached data')
+        return parsed.data
+      } else {
+        // 缓存过期，清除缓存
+        console.log('[getCachedData] Cache expired, removing cache')
+        localStorage.removeItem(CACHE_KEY)
+      }
+    }
+  } catch (e) {
+    console.error('[getCachedData] Failed to read cache:', e)
+  }
+  return null
+}
+
+// 保存数据到缓存
+const saveToCache = (data: any) => {
+  console.log('[saveToCache] Saving data to cache, data length:', data?.length || 0)
+  try {
+    const cacheData = {
+      timestamp: Date.now(),
+      data: data
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
+    console.log('[saveToCache] Data successfully saved to cache')
+  } catch (e) {
+    console.error('[saveToCache] Failed to save cache:', e)
+  }
+}
+
+// 检查是否在冷却期内
+const isInCooldown = () => {
+  const now = Date.now()
+  return (now - lastErrorTime) < COOLDOWN_DURATION
+}
+
 // 使用缓存数据的统一方法
 const useCacheData = (page: number = 1) => {
   console.log('[useCacheData] Attempting to use cached data for page:', page)
-  const cachedData = cacheManager.getCachedData<BuildRecord[]>(CACHE_KEY)
+  const cachedData = getCachedData()
   if (cachedData) {
     processData(cachedData, page, 'cache')
     error.value = t('message.usingCachedDataDueToError')
@@ -159,6 +231,22 @@ const useCacheData = (page: number = 1) => {
   return false
 }
 
+// 从发行版正文中提取提交信息的第一行
+const extractCommitMessage = (body: string): string => {
+  console.log('[extractCommitMessage] Extracting commit message from body')
+  if (!body) return ''
+
+  // 查找提交信息部分，格式为 "Commit Message\n> 提交信息内容"
+  const commitMessageMatch = body.match(/### Commit Message\n> (.+)/)
+  if (commitMessageMatch && commitMessageMatch[1]) {
+    console.log('[extractCommitMessage] Found commit message:', commitMessageMatch[1])
+    return commitMessageMatch[1]
+  }
+
+  console.log('[extractCommitMessage] No commit message found in body')
+  return ''
+}
+
 // 获取发布数据
 const fetchReleases = async (page: number = 1) => {
   console.log('[fetchReleases] Starting to fetch releases for page:', page)
@@ -167,7 +255,7 @@ const fetchReleases = async (page: number = 1) => {
     error.value = null
 
     // 检查是否在冷却期内
-    if (cacheManager.isInCooldown()) {
+    if (isInCooldown()) {
       console.log('[fetchReleases] In cooldown period')
       // 在冷却期内，直接使用缓存数据
       if (useCacheData(page)) {
@@ -250,32 +338,147 @@ const fetchFromGitHub = async (page: number, init: boolean = false) => {
     console.log('[fetchFromGitHub] Fetching data for all projects')
   }
 
-  try {
-    // 使用缓存管理器从GitHub获取数据
-    const allBuildRecords = await cacheManager.fetchFromGitHub(reposToQuery)
+  // 获取所有仓库的发布信息
+  let allBuildRecords: BuildRecord[] = []
 
-    // 如果成功获取到GitHub数据
-    if (allBuildRecords.length > 0) {
-      console.log('[fetchFromGitHub] Total records from GitHub API:', allBuildRecords.length)
-      // 保存到缓存（仅在获取完整数据时缓存）
-      if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
-        console.log('[fetchFromGitHub] Saving GitHub API data to cache')
-        cacheManager.saveToCache(CACHE_KEY, allBuildRecords)
+  for (const repo of reposToQuery) {
+    console.log('[fetchFromGitHub] Fetching releases for repo:', repo)
+    // 获取项目名
+    const projectName = Object.keys(repositoryMap).find(
+        key => repositoryMap[key] === repo
+    ) || repo.split('/')[1]
+    console.log('[fetchFromGitHub] Project name for repo:', projectName)
+
+    // 分页获取所有发布（GitHub API每页最多100条）
+    let apiPage = 1
+    let hasMore = true
+
+    while (hasMore) {
+      console.log('[fetchFromGitHub] Fetching page', apiPage, 'for repo:', repo)
+      const response = await fetch(
+          `https://api.github.com/repos/${repo}/releases?per_page=100&page=${apiPage}`
+      )
+      console.log('[fetchFromGitHub] GitHub API response status:', response.status)
+
+      if (response.status != 200) {
+        lastErrorTime = Date.now()
+        console.log('[fetchFromGitHub] GitHub API request failed, setting error time')
+        // GitHub API限制，尝试使用备用缓存
+        break;
       }
 
-      // 处理数据，优先级最高
-      processData(allBuildRecords, page, 'github-api', true, init)
-      jumpPageInput.value = ""
-      console.log('[fetchFromGitHub] Completed fetching GitHub releases')
-      return
+      // 检查其他HTTP错误
+      if (!response.ok) {
+        console.log('[fetchFromGitHub] GitHub API request not OK')
+        break;
+      }
+
+      const releases = await response.json()
+      console.log('[fetchFromGitHub] GitHub API Response for', repo, 'page', apiPage, ':', releases?.length || 0, 'items')
+
+      try {
+        // 验证返回数据格式
+        if (!Array.isArray(releases)) {
+          throw new Error('Invalid GitHub API response format')
+        }
+
+        // 转换为BuildRecord格式
+        const buildRecords: BuildRecord[] = releases.map((release: any) => {
+          // 数据验证
+          if (!release.id || !release.tag_name) {
+            throw new Error('Invalid release data in GitHub API response')
+          }
+
+          // 从tag_name提取提交哈希
+          const tagParts = release.tag_name.split('-')
+          const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : ''
+
+          // 从assets中提取下载信息 - 改进的逻辑
+          let downloadUrl = ''
+          let downloadCount = 0
+
+          if (release.assets && release.assets.length > 0) {
+            // 查找有效的下载资产（排除源代码压缩包）
+            const downloadAsset = release.assets.find((asset: any) =>
+                asset.browser_download_url &&
+                !asset.browser_download_url.includes('/source.') &&
+                (asset.content_type.includes('application/') || asset.name.endsWith('.jar'))
+            ) || release.assets[0];
+
+            if (downloadAsset) {
+              downloadUrl = downloadAsset.browser_download_url || ''
+              downloadCount = downloadAsset.download_count || 0
+            }
+          }
+
+          // 从release body中提取commit message
+          const commitMessage = extractCommitMessage(release.body || '');
+
+          // 从release body中提取分支信息
+          let branch = 'main';
+          const branchMatch = release.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/);
+          if (branchMatch && branchMatch[1]) {
+            branch = branchMatch[1];
+          } else if (release.target_commitish) {
+            branch = release.target_commitish;
+          }
+
+          return {
+            id: release.id,
+            projectName: projectName,
+            version: release.tag_name,
+            buildNumber: release.id,
+            releaseType: release.prerelease ? 'prerelease' : 'release',
+            startTime: release.published_at,
+            endTime: release.published_at,
+            duration: 0,
+            commitHash: commitHash,
+            branch: branch,
+            triggerBy: release.author?.login || 'Unknown',
+            commitMessage: commitMessage, // 使用提取的commit message
+            downloadUrl: downloadUrl,
+            downloadCount: downloadCount,
+            fromCache: false // 实时数据标记为非缓存
+          }
+        })
+
+        console.log('[fetchFromGitHub] Processed', buildRecords.length, 'records for repo:', repo)
+        allBuildRecords = [...allBuildRecords, ...buildRecords]
+      } catch (dataError) {
+        console.error('[fetchFromGitHub] Data validation failed:', dataError)
+        // 数据异常时跳出循环
+        break;
+      }
+
+      // 如果返回结果少于100条，说明已经到最后一页
+      if (releases.length < 100) {
+        console.log('[fetchFromGitHub] Reached last page for repo:', repo)
+        hasMore = false
+      } else {
+        console.log('[fetchFromGitHub] More pages available for repo:', repo)
+        apiPage++
+      }
     }
-  } catch (error) {
-    console.error('[fetchFromGitHub] Error fetching from GitHub:', error)
-    cacheManager.setErrorTime()
+  }
+
+  // 如果成功获取到GitHub数据
+  if (allBuildRecords.length > 0) {
+    console.log('[fetchFromGitHub] Total records from GitHub API:', allBuildRecords.length)
+    // 保存到缓存（仅在获取完整数据时缓存）
+    if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
+      console.log('[fetchFromGitHub] Saving GitHub API data to cache')
+      saveToCache(allBuildRecords)
+    }
+
+    // 处理数据，优先级最高
+    processData(allBuildRecords, page, 'github-api', true, init)
+    jumpPageInput.value = ""
+    console.log('[fetchFromGitHub] Completed fetching GitHub releases')
+    return
   }
 
   // 如果GitHub API获取失败，尝试检查是否有有效缓存
-  const cachedData = cacheManager.getCachedData<BuildRecord[]>(CACHE_KEY)
+  const cachedData = getCachedData()
   if (cachedData && page === 1 &&
       !filterProject.value &&
       !filterReleaseType.value &&
@@ -307,7 +510,9 @@ const fetchFromBackup = async (backupIndex: number, page: number, isParallel: bo
     const backupResponse = await fetch(selectedConfig.url)
     console.log('[fetchFromBackup] Backup cache response status:', backupResponse.status)
     if (backupResponse.ok) {
-      backupData = await backupResponse.json()
+      const rawData = await backupResponse.json()
+      // 添加对不同API结构的支持
+      backupData = parseApiResponse(rawData, selectedConfig.url)
       console.log('[fetchFromBackup] Successfully fetched backup data, items:', backupData?.length || 0)
     } else {
       console.log('[fetchFromBackup] Backup cache request failed, status:', backupResponse.status)
@@ -323,7 +528,9 @@ const fetchFromBackup = async (backupIndex: number, page: number, isParallel: bo
       const oldBackupResponse = await fetch(selectedConfig.oldUrl || '');
       console.log('[fetchFromBackup] Old backup cache response status:', oldBackupResponse.status)
       if (oldBackupResponse.ok) {
-        backupData = await oldBackupResponse.json()
+        const rawData = await oldBackupResponse.json()
+        // 添加对不同API结构的支持
+        backupData = parseApiResponse(rawData, selectedConfig.oldUrl || '')
         console.log('[fetchFromBackup] Successfully fetched old backup data, items:', backupData?.length || 0)
       } else {
         console.log('[fetchFromBackup] Old backup cache request failed, status:', oldBackupResponse.status)
@@ -351,17 +558,90 @@ const fetchFromBackup = async (backupIndex: number, page: number, isParallel: bo
         throw new Error('Invalid backup data format')
       }
 
-      // 使用缓存管理器处理备份数据
       const allBuildRecords: BuildRecord[] = backupData.map((item: any) => {
-        return cacheManager.processBackupData(item, getProjectNameByRepo);
-      });
+        // 数据验证和默认值处理
+        if (!item.source_repo || !item.tag_name) {
+          throw new Error('Invalid item data in backup')
+        }
+
+        // 从source_repo提取项目名
+        const projectName = getProjectNameByRepo(item.source_repo)
+
+        // 从tag_name提取版本信息和commit hash
+        const tagParts = item.tag_name.split('-')
+        const version = item.tag_name
+        // 提取提交哈希 (如: 1.21.8-cba8cbd -> cba8cbd)
+        const commitHash = tagParts.length > 1 ? tagParts[tagParts.length - 1].substring(0, 8) : ''
+
+        // 从body中提取分支信息
+        let branch = 'main'
+        const branchMatch = item.body?.match(/### Branch Info\n> ([\w\/\-\.]+)/)
+        if (branchMatch && branchMatch[1]) {
+          branch = branchMatch[1]
+        }
+
+        // 从body中提取触发者信息
+        let triggerBy = 'Unknown'
+        if (item.body?.includes('automatically compiled by GitHub Actions')) {
+          triggerBy = 'GitHub Actions'
+        }
+
+        // 从body中提取提交信息
+        const commitMessage = extractCommitMessage(item.body)
+
+        // 从assets中提取下载信息
+        let downloadUrl = ''
+        let downloadCount = 0
+
+        if (item.assets && item.assets.length > 0) {
+          const asset = item.assets[0] // 使用第一个资产作为下载链接
+          downloadUrl = asset.download_url || ''
+          downloadCount = asset.download_count || 0
+        }
+
+        // 根据备份数据中的状态字段设置状态，如果没有则根据tag名称判断
+        let releaseType: 'release' | 'prerelease' = 'release'
+        if (item.releaseType) {
+          releaseType = item.releaseType
+        } else if (item.prerelease !== undefined) {
+          releaseType = item.prerelease ? 'prerelease' : 'release'
+        } else {
+          // 根据tag名称判断是否为预发布版本
+          const lowerTagName = item.tag_name.toLowerCase()
+          if (lowerTagName.includes('beta') ||
+              lowerTagName.includes('alpha') ||
+              lowerTagName.includes('rc') ||
+              lowerTagName.includes('snapshot') ||
+              lowerTagName.includes('dev')) {
+            releaseType = 'prerelease'
+          }
+        }
+
+        return {
+          id: item.id || Math.floor(Math.random() * 1000000),
+          projectName: projectName,
+          version: version,
+          buildNumber: item.id || Math.floor(Math.random() * 1000000),
+          releaseType: releaseType,
+          startTime: item.published_at || new Date().toISOString(),
+          endTime: item.published_at || new Date().toISOString(),
+          duration: item.duration || 0,
+          commitHash: commitHash,
+          branch: branch,
+          triggerBy: triggerBy,
+          commitMessage: commitMessage,
+          downloadUrl: downloadUrl,
+          downloadCount: downloadCount,
+          fromCache: true // 备份数据标记为来自缓存
+        }
+      })
 
       console.log('[fetchFromBackup] Processed backup data, total records:', allBuildRecords.length)
 
       // 保存到本地缓存
       if (!filterProject.value && !filterReleaseType.value && !searchKeyword.value && !filterVersionPrefix.value) {
         console.log('[fetchFromBackup] Saving backup data to cache')
-        cacheManager.saveToCache(CACHE_KEY, allBuildRecords)
+        saveToCache(allBuildRecords)
       }
 
       // 只有在非并行模式下或者当前没有数据显示时才处理数据
@@ -606,6 +886,55 @@ const formatReleaseDateTimeLines = (dateString: string) => {
     console.error('Error formatting date:', e)
     return {date: dateString, time: '', timezone: ''}
   }
+}
+
+// 添加解析API响应的辅助函数
+const parseApiResponse = (rawData: any, url: string): any[] | null => {
+  console.log('[parseApiResponse] Parsing API response for URL:', url)
+
+  // 如果已经是期望的数组格式，直接返回
+  if (Array.isArray(rawData)) {
+    console.log('[parseApiResponse] Data is already in expected array format')
+    return rawData
+  }
+
+  // 检查是否是带有分页信息的对象格式
+  if (typeof rawData === 'object' && rawData !== null) {
+    // 尝试常见的数据路径
+    const possiblePaths = [
+      'data',           // 最常见的包装属性
+      'releases',       // 发布数据专用属性
+      'items',          // 通用项集合
+      'results',        // 查询结果集
+      'content'         // 内容主体
+    ]
+
+    for (const path of possiblePaths) {
+      if (Array.isArray(rawData[path])) {
+        console.log(`[parseApiResponse] Found data in path: ${path}`)
+        return rawData[path]
+      }
+    }
+
+    // 检查是否符合特定API结构定义
+    for (const apiStructure of possibleApiStructures) {
+      // 这里可以根据实际URL匹配规则进一步细化
+      if (url.includes(apiStructure.name.toLowerCase())) {
+        // 对于特定API结构的特殊处理
+        console.log(`[parseApiResponse] Applying structure for API: ${apiStructure.name}`)
+
+        // 根据路径模式查找数据
+        if (apiStructure.path === '*' && Array.isArray(rawData.data)) {
+          return rawData.data
+        } else if (apiStructure.path === 'releases/*' && Array.isArray(rawData.releases)) {
+          return rawData.releases
+        }
+      }
+    }
+  }
+
+  console.log('[parseApiResponse] Could not parse data into expected format')
+  return null
 }
 
 const pageSizeOptions = computed(() => [
