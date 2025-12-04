@@ -4,7 +4,7 @@ import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {formatDate} from '../utils/dateUtils.ts'
 import {NAlert, NButton, NCard, NCode, NLayout, NLayoutContent, NSpin} from 'naive-ui'
-import cacheConfigs from '../config/cacheConfig.ts'
+import cacheManager from '../utils/cacheManager/cacheManager.ts'
 
 const {t} = useI18n()
 const router = useRouter() // 初始化路由
@@ -24,9 +24,6 @@ const activeProject = ref('luminol')
 
 // 缓存相关常量
 const CACHE_KEY_PREFIX = 'github_releases_'
-const CACHE_DURATION = 30 * 60 * 1000 // 30分钟
-const COOLDOWN_DURATION = 15 * 60 * 1000 // 15分钟冷却期
-let lastErrorTime = 0 // 上次错误时间
 
 // 获取稳定版本
 const getStableReleases = () => {
@@ -72,121 +69,16 @@ const getGradleCommand = () => {
   return './gradlew applyAllPatches && ./gradlew createMojmapPaperclipJar'
 }
 
-// 检查缓存是否有效
-const isCacheValid = (cachedData: any) => {
-  if (!cachedData) return false
-  const now = Date.now()
-  return (now - cachedData.timestamp) < CACHE_DURATION
-}
-
-// 从缓存获取数据
-const getCachedData = (projectName: string) => {
-  try {
-    const cacheKey = `${CACHE_KEY_PREFIX}${projectName}`
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      const parsed = JSON.parse(cached)
-      if (isCacheValid(parsed)) {
-        return parsed.data
-      } else {
-        // 缓存过期，清除缓存
-        localStorage.removeItem(cacheKey)
-      }
-    }
-  } catch (e) {
-    console.error('Failed to read cache:', e)
-  }
-  return null
-}
-
-// 保存数据到缓存
-const saveToCache = (projectName: string, data: any) => {
-  try {
-    const cacheKey = `${CACHE_KEY_PREFIX}${projectName}`
-    const cacheData = {
-      timestamp: Date.now(),
-      data: data
-    }
-    localStorage.setItem(cacheKey, JSON.stringify(cacheData))
-  } catch (e) {
-    console.error('Failed to save cache:', e)
-  }
-}
-
-// 检查是否在冷却期内
-const isInCooldown = () => {
-  const now = Date.now()
-  return (now - lastErrorTime) < COOLDOWN_DURATION
-}
-
 // 使用缓存数据的统一方法
 const useCacheData = (projectName: string) => {
-  const cachedData = getCachedData(projectName)
+  const cacheKey = `${CACHE_KEY_PREFIX}${projectName}`;
+  const cachedData = cacheManager.getCachedData<Release[]>(cacheKey)
   if (cachedData) {
     releases.value = cachedData
     hasError.value = false
     return true
   }
   return false
-}
-
-// 从远程缓存获取数据 - 使用缓存配置
-const fetchFromBackupCache = async (projectName: string) => {
-  // 遍历所有缓存配置
-  for (const config of cacheConfigs) {
-    if (config.disabled) continue
-    try {
-      // 尝试获取主缓存
-      const backupResponse = await fetch(config.url)
-      if (backupResponse.ok) {
-        const backupData = await backupResponse.json()
-        // 过滤出指定项目的发布信息
-        const projectData = backupData.filter((item: any) =>
-            item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
-        )
-
-        // 转换为Release格式
-        const convertedData: Release[] = projectData.map((item: any) => ({
-          name: item.name || item.tag_name,
-          tag_name: item.tag_name,
-          published_at: item.published_at || new Date().toISOString(),
-          html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
-          prerelease: item.prerelease || false
-        }))
-
-        return convertedData
-      }
-    } catch (e) {
-      console.warn(`Primary backup cache (${config.name}) unavailable, trying next:`, e)
-      // 如果有配置旧缓存URL，则尝试获取旧缓存
-      if (config.oldUrl) {
-        try {
-          const oldBackupResponse = await fetch(config.oldUrl)
-          if (oldBackupResponse.ok) {
-            const oldBackupData = await oldBackupResponse.json()
-            // 过滤出指定项目的发布信息
-            const projectData = oldBackupData.filter((item: any) =>
-                item.source_repo && item.source_repo.toLowerCase().includes(projectName.toLowerCase())
-            )
-
-            // 转换为Release格式
-            const convertedData: Release[] = projectData.map((item: any) => ({
-              name: item.name || item.tag_name,
-              tag_name: item.tag_name,
-              published_at: item.published_at || new Date().toISOString(),
-              html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
-              prerelease: item.prerelease || false
-            }))
-
-            return convertedData
-          }
-        } catch (oldError) {
-          console.warn(`Old backup cache (${config.name}) also unavailable:`, oldError)
-        }
-      }
-    }
-  }
-  return null
 }
 
 // 打开构建查看器页面
@@ -198,9 +90,10 @@ const fetchReleases = async () => {
   try {
     loading.value = true
     const projectName = getProjectName()
+    const cacheKey = `${CACHE_KEY_PREFIX}${projectName}`;
 
     // 检查是否在冷却期内
-    if (isInCooldown()) {
+    if (cacheManager.isInCooldown()) {
       // 在冷却期内，直接使用缓存数据
       if (useCacheData(projectName)) {
         loading.value = false
@@ -209,7 +102,7 @@ const fetchReleases = async () => {
     }
 
     // 首先检查是否有有效缓存
-    const cachedData = getCachedData(projectName)
+    const cachedData = cacheManager.getCachedData<Release[]>(cacheKey)
     if (cachedData) {
       releases.value = cachedData
       hasError.value = false
@@ -220,11 +113,21 @@ const fetchReleases = async () => {
     const response = await fetch(`https://api.github.com/repos/LuminolMC/${projectName}/releases`)
     if (!response.ok) {
       // GitHub API 不可用时，尝试使用远程缓存
-      const backupData = await fetchFromBackupCache(projectName)
+      const backupData = await cacheManager.fetchFromBackupCache<Release>(
+          projectName,
+          (item: any) => ({
+            name: item.name || item.tag_name,
+            tag_name: item.tag_name,
+            published_at: item.published_at || new Date().toISOString(),
+            html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
+            prerelease: item.prerelease || false
+          })
+      );
+
       if (backupData) {
         releases.value = backupData
         // 保存到本地缓存
-        saveToCache(projectName, backupData)
+        cacheManager.saveToCache(cacheKey, backupData)
         hasError.value = false
         loading.value = false
         return
@@ -244,18 +147,30 @@ const fetchReleases = async () => {
     releases.value = data
 
     // 保存到缓存
-    saveToCache(projectName, data)
+    cacheManager.saveToCache(cacheKey, data)
 
     hasError.value = false
   } catch (err) {
-    lastErrorTime = Date.now()
+    cacheManager.setErrorTime()
     // 如果请求失败，尝试使用远程缓存
     const projectName = getProjectName()
-    const backupData = await fetchFromBackupCache(projectName)
+    const cacheKey = `${CACHE_KEY_PREFIX}${projectName}`;
+
+    const backupData = await cacheManager.fetchFromBackupCache<Release>(
+        projectName,
+        (item: any) => ({
+          name: item.name || item.tag_name,
+          tag_name: item.tag_name,
+          published_at: item.published_at || new Date().toISOString(),
+          html_url: item.html_url || `https://github.com/LuminolMC/${projectName}/releases/tag/${item.tag_name}`,
+          prerelease: item.prerelease || false
+        })
+    );
+
     if (backupData) {
       releases.value = backupData
       // 保存到本地缓存
-      saveToCache(projectName, backupData)
+      cacheManager.saveToCache(cacheKey, backupData)
       hasError.value = false
       loading.value = false
       return
