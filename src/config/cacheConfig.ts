@@ -7,7 +7,7 @@ export interface CacheConfig {
 
 const cacheConfigs: CacheConfig[] = [
     {
-        name: 'Cache_American',
+        name: 'Cache_America',
         url: 'https://api.luminolmc.cache-build-data.blue-millennium.fun/github_releases.json',
         oldUrl: 'https://api.luminolmc.cache-build-data.blue-millennium.fun/github_releases.old.json'
     },
