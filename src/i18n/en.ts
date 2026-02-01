@@ -124,6 +124,7 @@ export default {
         telegram: 'Telegram',
         locyanNetwork: 'LoCyanTeam',
         rainyun: 'Rainyun',
+        jprofiler: 'JProfiler',
         deployOnRainyun: 'Deploy on Rainyun'
     }
 }

@@ -112,6 +112,7 @@ const currentRouteName = computed(() => route.name as string)
           <ul>
             <li><a href="https://www.locyan.cn/">{{ t('message.locyanNetwork') }}</a></li>
             <li><a href="https://www.rainyun.com/">{{ t('message.rainyun') }}</a></li>
+            <li><a href="https://www.ej-technologies.com/jprofiler">{{ t('message.jprofiler') }}</a></li>
           </ul>
         </div>
       </div>

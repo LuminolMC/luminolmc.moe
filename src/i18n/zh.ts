@@ -127,6 +127,7 @@ export default {
         telegram: 'Telegram',
         locyanNetwork: '乐青团队',
         rainyun: '雨云',
+        jprofiler: 'JProfiler',
         deployOnRainyun: '在雨云上部署'
     }
 }
