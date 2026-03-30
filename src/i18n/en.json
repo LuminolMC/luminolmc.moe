@@ -1,0 +1,182 @@
+{
+  "lang": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "aria": {
+    "toggleMenu": "Toggle menu",
+    "toggleLanguage": "Toggle language",
+    "close": "Close"
+  },
+  "ui": {
+    "toggleMenu": "Toggle menu",
+    "toggleLanguage": "Toggle language",
+    "close": "Close",
+    "downloadNow": "Download now",
+    "githubRepo": "GitHub repository"
+  },
+  "nav": {
+    "overview": "Overview",
+    "features": "Why Luminol",
+    "projects": "Project family",
+    "api": "API usage",
+    "about": "About us",
+    "community": "Community & support",
+    "github": "GitHub",
+    "luminolCraft": "LuminolCraft"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "whyChoose": "Why Luminol",
+    "projectFamily": "Project family",
+    "apiUsage": "API usage",
+    "aboutUs": "About us",
+    "communitySupport": "Community & support",
+    "externalGithub": "GitHub",
+    "externalCraft": "LuminolCraft"
+  },
+  "hero": {
+    "title": "Luminol",
+    "tagline": "*Built for survival and anarchy servers, bringing optimizations, configurable vanilla mechanics, and a rich API.*",
+    "downloadNow": "Download now",
+    "githubRepo": "GitHub repository"
+  },
+  "sections": {
+    "whyChooseTitle": "Why choose Luminol?",
+    "projectFamilyTitle": "Project family",
+    "apiUsageTitle": "API usage",
+    "aboutUsTitle": "About us",
+    "communityTitle": "Community & support",
+    "ecosystemTitle": "Ecosystem",
+    "sponsorsTitle": "Special thanks"
+  },
+  "features": {
+    "threading": {
+      "title": "Extreme multithreaded performance",
+      "desc": "Built on Folia’s regionized multithreading architecture, Luminol further optimizes scheduling. Under heavy redstone, dense entities, and large builds, it reduces main-thread pressure and helps servers stay responsive at 20 TPS even at high concurrency."
+    },
+    "linear": {
+      "title": "Linear world format built-in",
+      "desc": "Includes first-class support for the Linear world format. Compared to classic Anvil, Linear can reduce disk usage significantly and improve chunk load/save throughput, addressing IO bottlenecks on large worlds."
+    },
+    "stability": {
+      "title": "Deep bug fixes and stability",
+      "desc": "In addition to upstream Folia fixes, we deliver targeted fixes for community-reported crashes, entity issues, and chunk corruption. The goal is a more stable runtime for production than vanilla Folia."
+    },
+    "config": {
+      "title": "Highly configurable gameplay logic",
+      "desc": "Via luminol.yml, you can fine-tune everything from mob spawning and redstone tick behavior to specific vanilla feature toggles. Designed to satisfy both casual survival servers and high-end technical servers.",
+      "descBeforeFile": "Via ",
+      "descAfterFile": ", you can fine-tune everything from mob spawning and redstone tick behavior to specific vanilla feature toggles. Designed to satisfy both casual survival servers and high-end technical servers."
+    }
+  },
+  "projects": {
+    "luminol": {
+      "tag": "Main",
+      "desc": "A core branch based on Folia, focused on extreme performance and production stability."
+    },
+    "lophine": {
+      "tag": "Technical",
+      "desc": "Designed for technical Minecraft servers—restoring legacy behavior and adding more tooling for advanced builds."
+    },
+    "lighting": {
+      "tag": "Compatibility",
+      "desc": "Maximizes legacy plugin compatibility and mitigates Bukkit API breakage in the Folia ecosystem."
+    }
+  },
+  "api": {
+    "intro": "Luminol provides an extended API to help plugin developers build more safely and efficiently in Folia’s regionized multithreaded environment. You can access region schedulers, handle async flows, and leverage Luminol-specific performance interfaces."
+  },
+  "team": {
+    "categories": {
+      "core": "Core developers",
+      "community": "Community contributors",
+      "ecosystem": "Ecosystem & tooling"
+    },
+    "roles": {
+      "luminolFounder": "Founder and core maintainer of Luminol",
+      "lophineLead": "Lead developer of Lophine",
+      "lightingMaintainer": "Primary maintainer of LightingLuminol",
+      "communitySupporter": "Community supporter",
+      "frontendRefactorCoreContributor": "Core contributor to the frontend refactor",
+      "communityContributor": "Community contributor",
+      "frontendApiDev": "Frontend & API development",
+      "frontendDev": "Frontend development"
+    }
+  },
+  "download": {
+    "title": "Get started",
+    "desc": "Choose a branch for your server, download the latest build, and experience performance and optimizations.",
+    "stable": "Stable",
+    "experience": "Experimental (unstable)",
+    "versionLabel": "Version",
+    "buildLabel": "Build",
+    "version": "Version",
+    "build": "Build"
+  },
+  "quickStart": {
+    "title": "Quick start guide",
+
+    "step1Title": "1. First launch",
+    "step1Desc": "Run the following command in your terminal to start the server:",
+    "step1NoteBefore": "On the first start, the server will generate configuration files and exit automatically. Edit ",
+    "step1NoteMiddle": " and change ",
+    "step1NoteAfter": " to ",
+    "step1NoteEnd": ".",
+
+    "step2Title": "2. Performance tuning",
+    "step2DescBeforeFile": "Edit ",
+    "step2DescAfterFile": ". Enable the following settings for best performance:",
+
+    "step3Title": "3. Migration notes",
+    "step3Desc": "If you are migrating from Paper, note that some plugins that are not compatible with multithreading may not work under the Folia architecture. Validate plugin compatibility in a staging environment first.",
+    "yamlExampleComment": "Recommended configuration",
+
+    "step1": {
+      "title": "1. First launch",
+      "desc": "Run the following command in your terminal to start the server:",
+      "note": "On the first start, the server will generate configuration files and exit automatically. Edit eula.txt and change false to true."
+    },
+    "step2": {
+      "title": "2. Performance tuning",
+      "desc": "Edit luminol.yml in your server root. Enable the following settings for best performance:"
+    },
+    "step3": {
+      "title": "3. Migration notes",
+      "desc": "If you are migrating from Paper, note that some plugins that are not compatible with multithreading may not work under the Folia architecture. Validate plugin compatibility in a staging environment first."
+    }
+  },
+  "footer": {
+    "brand": "Luminol Project",
+    "servingPlayers": "Serving {players} players",
+    "copyright": "© 2025-2026 Luminol Team. All rights reserved.",
+    "disclaimer": "This website is not an official Minecraft website and is not affiliated with Mojang Studios or Microsoft.",
+
+    "communityTitle": "Community & support",
+    "ecosystemTitle": "Ecosystem",
+    "sponsorsTitle": "Special thanks",
+    "qqGroup": "QQ group: {id}",
+    "telegram": "Telegram channel",
+    "discord": "Discord community",
+    "craftTitle": "Luminol public community server",
+    "craftTooltip": "A public community server based on the Luminol family server software.",
+    "sponsorRainyun": "Rainyun - fast cloud deployment",
+    "sponsorJProfiler": "JProfiler - Java performance profiling",
+
+    "community": {
+      "title": "Community & support",
+      "qqGroup": "QQ group: {id}",
+      "telegram": "Telegram channel",
+      "discord": "Discord community"
+    },
+    "ecosystem": {
+      "title": "Ecosystem",
+      "craft": "Luminol public community server"
+    },
+    "sponsors": {
+      "title": "Special thanks",
+      "rainyun": "Rainyun - fast cloud deployment",
+      "jprofiler": "JProfiler - Java performance profiling"
+    }
+  }
+}

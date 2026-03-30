@@ -1,22 +1,38 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <link href="/vite.svg" rel="icon" type="image/svg+xml"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <meta content="LuminolMC - 致力于推动Folia生态的创新，为现代Minecraft服务端生态提供高性能解决方案"
-          name="description"/>
-    <meta content="LuminolMC, Minecraft, Folia, 服务端, Minecraft服务器, 高性能, 优化" name="keywords"/>
-    <meta content="Luminol Team" name="author"/>
-    <meta content="LuminolMC" property="og:title"/>
-    <meta content="LuminolMC - 致力于推动Folia生态的创新，为现代Minecraft服务端生态提供高性能解决方案"
-          property="og:description"/>
-    <meta content="website" property="og:type"/>
-    <meta content="https://luminolmc.moe" property="og:url"/>
-    <title>LuminolMC | 高性能Minecraft服务端解决方案</title>
-</head>
-<body>
-<div id="app"></div>
-<script src="/src/main.ts" type="module"></script>
-</body>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Luminol - 高性能 Minecraft 服务端</title>
+        <meta
+            name="description"
+            content="Luminol 是一款专为技术型玩家和大型服务器设计的高性能 Minecraft 服务端，提供极致的优化与丰富的特性。"
+        />
+        <meta
+            name="keywords"
+            content="Minecraft, Server, Luminol, LuminolMC, PaperMC, Purpur, 优化, 高性能, 服务端"
+        />
+        <meta name="author" content="Luminol Team" />
+        <script>
+            (function () {
+                var p = localStorage.getItem("theme") || "system";
+                var d =
+                    p === "dark" ||
+                    (p === "system" &&
+                        matchMedia("(prefers-color-scheme:dark)").matches);
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    d ? "dark" : "light",
+                );
+                window.__INITIAL_DARK__ = d;
+            })();
+        </script>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://rsms.me/" />
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    </head>
+    <body style="margin: 0">
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
 </html>
