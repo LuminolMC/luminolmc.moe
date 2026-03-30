@@ -1,0 +1,147 @@
+{
+  "lang": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "aria": {
+    "toggleMenu": "切换菜单",
+    "toggleLanguage": "切换语言",
+    "close": "关闭"
+  },
+  "ui": {
+    "toggleMenu": "切换菜单",
+    "toggleLanguage": "切换语言",
+    "close": "关闭",
+    "downloadNow": "立即下载",
+    "githubRepo": "GitHub 仓库"
+  },
+  "nav": {
+    "overview": "总览",
+    "features": "为什么选择 Luminol",
+    "projects": "项目家族",
+    "api": "API 使用",
+    "about": "关于我们",
+    "community": "社区支持",
+    "github": "GitHub",
+    "luminolCraft": "LuminolCraft"
+  },
+  "sidebar": {
+    "overview": "总览",
+    "whyChoose": "为什么选择 Luminol",
+    "projectFamily": "项目家族",
+    "apiUsage": "API 使用",
+    "aboutUs": "关于我们",
+    "communitySupport": "社区支持",
+    "externalGithub": "GitHub",
+    "externalCraft": "LuminolCraft"
+  },
+  "hero": {
+    "downloadNow": "立即下载",
+    "githubRepo": "GitHub 仓库",
+    "tagline": "*专为生存和无政府服务器设计，提供优化、可配置的原版特性和丰富的 API 支持*"
+  },
+  "sections": {
+    "whyChooseTitle": "为什么选择 Luminol？",
+    "projectFamilyTitle": "项目家族",
+    "apiUsageTitle": "API 使用",
+    "aboutUsTitle": "关于我们",
+    "communityTitle": "社区与支持",
+    "ecosystemTitle": "生态项目",
+    "sponsorsTitle": "特别感谢"
+  },
+  "features": {
+    "threading": {
+      "title": "极致的多线程性能",
+      "desc": "基于 Folia 的区域化多线程架构，Luminol 进一步优化了线程调度算法。在处理大规模红石机器、高密度实体建筑时，能够显著降低主线程负担，让服务器在满员状态下依然保持 20 TPS 的流畅体验。"
+    },
+    "linear": {
+      "title": "Linear 存档格式集成",
+      "desc": "内置对 Linear 存档格式的支持。相比传统的 Anvil 格式，Linear 能减少高达 50% 的磁盘占用，并大幅提升区块加载与保存的速度，彻底解决大地图带来的 IO 瓶颈问题。"
+    },
+    "stability": {
+      "title": "深度 Bug 修复与稳定性",
+      "desc": "我们不仅同步上游 Folia 的修复，还针对社区反馈的特定崩溃、实体消失、区块损坏等问题进行了专项修复。Luminol 旨在提供一个比原版 Folia 更稳定、更适合生产环境的运行环境。"
+    },
+    "config": {
+      "title": "高度可定制的游戏逻辑",
+      "descBeforeFile": "通过 ",
+      "descAfterFile": "，你可以精细控制游戏内的各种逻辑：从刷怪速率、红石刻频率到特定的原版特性开关。一切皆可配置，满足从生存服到生电服的各种苛刻需求。"
+    }
+  },
+  "projects": {
+    "luminol": {
+      "tag": "主线",
+      "desc": "基于 Folia 的核心分支，追求极致性能与稳定性。"
+    },
+    "lophine": {
+      "tag": "生电向",
+      "desc": "专为生电服务器设计，还原旧特性并提供更多生电支持。"
+    },
+    "lighting": {
+      "tag": "兼容性",
+      "desc": "最大程度保证旧插件兼容性，修复对 BukkitAPI 的破坏。"
+    }
+  },
+  "api": {
+    "intro": "Luminol 提供了扩展的 API，允许开发者在 Folia 的区域化多线程环境下更安全、高效地开发插件。你可以访问特定的区域调度器、处理异步事件以及利用 Luminol 独有的性能优化接口。"
+  },
+  "about": {
+    "coreDev": "核心开发",
+    "communityContrib": "社区贡献者",
+    "peripheralDev": "周边开发"
+  },
+  "team": {
+    "categories": {
+      "core": "核心开发",
+      "community": "社区贡献者",
+      "ecosystem": "周边开发"
+    },
+    "roles": {
+      "luminolFounder": "Luminol 项目创始人和核心维护者",
+      "lophineLead": "Lophine 的主要开发者",
+      "lightingMaintainer": "LightingLuminol 的主要维护者",
+      "communitySupporter": "社区支持者",
+      "frontendApiDev": "前端开发、API 开发",
+      "frontendDev": "前端开发"
+    }
+  },
+  "footer": {
+    "brand": "Luminol Project",
+    "communityTitle": "社区与支持",
+    "ecosystemTitle": "生态项目",
+    "sponsorsTitle": "特别感谢",
+    "qqGroup": "QQ 群: {id}",
+    "telegram": "Telegram 频道",
+    "discord": "Discord 社区",
+    "craftTitle": "Luminol 公益群组服",
+    "craftTooltip": "基于 Luminol 系服务端的 Minecraft 公益群组服",
+    "sponsorRainyun": "雨云 - 助力快速上云",
+    "sponsorJProfiler": "JProfiler - Java 性能分析",
+    "servingPlayers": "正在服务 {players} 个玩家",
+    "copyright": "© 2025-2026 Luminol Team. 保留所有权利。",
+    "disclaimer": "本网站不是官方 Minecraft 网站，与 Mojang Studios 或 Microsoft 无关。"
+  },
+  "quickStart": {
+    "title": "快速开始指南",
+    "step1Title": "1. 首次运行",
+    "step1Desc": "在终端中执行以下命令启动服务器：",
+    "step1NoteBefore": "首次启动会生成配置文件并自动退出，请将 ",
+    "step1NoteMiddle": " 中的 ",
+    "step1NoteAfter": " 改为 ",
+    "step1NoteEnd": "。",
+    "step2Title": "2. 配置优化",
+    "step2DescBeforeFile": "编辑根目录下的 ",
+    "step2DescAfterFile": "。建议开启以下配置以获得最佳性能：",
+    "step3Title": "3. 迁移建议",
+    "step3Desc": "如果你是从 Paper 迁移，请注意 Folia 架构下部分不兼容多线程的插件可能无法运行。建议先在测试环境确认插件兼容性。",
+    "yamlExampleComment": "推荐配置示例"
+  },
+  "download": {
+    "title": "开始使用",
+    "desc": "选择适合你服务器的分支，下载最新构建版本，体验极致的性能与优化。",
+    "stable": "稳定版",
+    "experience": "体验版（不稳定）",
+    "versionLabel": "版本",
+    "buildLabel": "构建"
+  }
+}
