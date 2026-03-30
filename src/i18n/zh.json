@@ -38,7 +38,7 @@
   "hero": {
     "downloadNow": "立即下载",
     "githubRepo": "GitHub 仓库",
-    "tagline": "*专为生存和无政府服务器设计，提供优化、可配置的原版特性和丰富的 API 支持*"
+    "tagline": "*专为生存和无政府服务器设计并提供丰富配置与的 API 支持*"
   },
   "sections": {
     "whyChooseTitle": "为什么选择 Luminol？",
@@ -101,6 +101,8 @@
       "lophineLead": "Lophine 的主要开发者",
       "lightingMaintainer": "LightingLuminol 的主要维护者",
       "communitySupporter": "社区支持者",
+      "frontendRefactorCoreContributor": "前端重构核心贡献者",
+      "communityContributor": "社区贡献者",
       "frontendApiDev": "前端开发、API 开发",
       "frontendDev": "前端开发"
     }

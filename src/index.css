@@ -285,11 +285,11 @@ p {
     width: 100%;
     height: 100%;
     background-color: var(--color-text-primary);
-    mask-image: url("/assets/oss-cdn-sdjz-wiki/luminol_icon.svg");
+    mask-image: url("/assets/logo/luminol_icon.svg");
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
-    -webkit-mask-image: url("/assets/oss-cdn-sdjz-wiki/luminol_icon.svg");
+    -webkit-mask-image: url("/assets/logo/luminol_icon.svg");
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -332,11 +332,11 @@ p {
     width: 72px;
     height: 24px;
     background-color: var(--color-text-primary);
-    mask-image: url("/assets/oss-cdn-sdjz-wiki/luminol_wordmark.svg");
+    mask-image: url("/assets/logo/luminol_wordmark.svg");
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center left;
-    -webkit-mask-image: url("/assets/oss-cdn-sdjz-wiki/luminol_wordmark.svg");
+    -webkit-mask-image: url("/assets/logo/luminol_wordmark.svg");
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center left;
@@ -1748,11 +1748,26 @@ p {
     gap: 12px;
 }
 
+.footer-sponsor-link {
+    text-decoration: none;
+}
+
+.footer-sponsor-link:hover span,
+.footer-sponsor-link:focus-visible span {
+    color: var(--color-text-primary);
+}
+
 .footer-sponsor img {
     height: 24px;
     width: auto;
     filter: grayscale(1);
     opacity: 0.6;
+}
+
+.footer-sponsor img.footer-sponsor-logo-original {
+    filter: none !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal;
 }
 
 .footer-sponsor span {

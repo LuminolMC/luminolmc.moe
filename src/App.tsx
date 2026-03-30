@@ -270,8 +270,8 @@ export default function App() {
       id: "luminol",
       name: "Luminol",
       tag: t("projects.luminol.tag"),
-      icon: "/assets/oss-cdn-sdjz-wiki/luminol_icon.svg",
-      wordmark: "/assets/oss-cdn-sdjz-wiki/luminol_wordmark.svg",
+      icon: "/assets/logo/luminol_icon.svg",
+      wordmark: "/assets/logo/luminol_wordmark.svg",
       desc: t("projects.luminol.desc"),
       link: "https://github.com/LuminolMC/Luminol",
     },
@@ -279,8 +279,8 @@ export default function App() {
       id: "lophine",
       name: "Lophine",
       tag: t("projects.lophine.tag"),
-      icon: "/assets/oss-cdn-sdjz-wiki/zophine_icon_logo_hd.png",
-      wordmark: "/assets/oss-cdn-sdjz-wiki/zophine_wordmark_hd.png",
+      icon: "/assets/logo/zophine_icon_logo_hd.png",
+      wordmark: "/assets/logo/zophine_wordmark_hd.png",
       desc: t("projects.lophine.desc"),
       link: "https://github.com/LuminolMC/Lophine",
     },
@@ -288,8 +288,8 @@ export default function App() {
       id: "lighting",
       name: "LightingLuminol",
       tag: t("projects.lighting.tag"),
-      icon: "/assets/oss-cdn-sdjz-wiki/lighting_icon_logo_hd.png",
-      wordmark: "/assets/oss-cdn-sdjz-wiki/lighting_wordmark_hd.png",
+      icon: "/assets/logo/lighting_icon_logo_hd.png",
+      wordmark: "/assets/logo/lighting_wordmark_hd.png",
       desc: t("projects.lighting.desc"),
       link: "https://github.com/LuminolMC/LightingLuminol",
     },
@@ -327,6 +327,18 @@ export default function App() {
           role: t("team.roles.communitySupporter"),
           github: "https://github.com/Dreeam-qwq",
           avatar: "https://avatars.githubusercontent.com/u/61569423?v=4",
+        },
+        {
+          name: "Shuakami",
+          role: t("team.roles.frontendRefactorCoreContributor"),
+          github: "https://github.com/Shuakami",
+          avatar: "https://avatars.githubusercontent.com/u/149454909?v=4",
+        },
+        {
+          name: "xiaoyueyoqwq",
+          role: t("Try Nextjs!"),
+          github: "https://github.com/xiaoyueyoqwq",
+          avatar: "https://avatars.githubusercontent.com/u/71379165?v=4",
         },
       ],
     },
@@ -710,7 +722,7 @@ fix-folia-bugs: true`;
               <div className="hero-title-group">
                 <div className="hero-logo-container">
                   <img
-                    src="/assets/oss-cdn-sdjz-wiki/luminol_icon.svg"
+                    src="/assets/logo/luminol_icon.svg"
                     alt="Luminol Logo"
                     className="hero-main-logo"
                   />
@@ -951,7 +963,7 @@ fix-folia-bugs: true`;
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.img
-              src="/assets/oss-cdn-sdjz-wiki/luminol_icon.svg"
+              src="/assets/logo/luminol_icon.svg"
               alt="Luminol Huge"
               className="huge-svg relative z-10"
               animate={{ y: [0, -10, 0] }}
@@ -997,20 +1009,32 @@ fix-folia-bugs: true`;
           <div className="footer-section" id="sponsors">
             <h3 className="footer-title">{t("footer.sponsorsTitle")}</h3>
             <div className="footer-sponsors">
-              <div className="footer-sponsor">
+              <a
+                href="https://www.rainyun.com/rgs/aiyuyun_"
+                target="_blank"
+                rel="noreferrer"
+                className="footer-sponsor footer-sponsor-link"
+              >
                 <img
-                  src="https://luminolsuki.moe/assets/rainyun-DCNK7j8p.svg"
+                  src="/assets/logo/Rainyun.svg"
                   alt="Rainyun"
+                  className="footer-sponsor-logo-original"
                 />
                 <span>{t("footer.sponsorRainyun")}</span>
-              </div>
-              <div className="footer-sponsor">
+              </a>
+              <a
+                href="https://www.ej-technologies.com/jprofiler"
+                target="_blank"
+                rel="noreferrer"
+                className="footer-sponsor footer-sponsor-link"
+              >
                 <img
                   src="https://www.ej-technologies.com/images/product_banners/jprofiler_large.png"
                   alt="JProfiler"
+                  className="footer-sponsor-logo-original"
                 />
                 <span>{t("footer.sponsorJProfiler")}</span>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -1080,7 +1104,7 @@ fix-folia-bugs: true`;
               {/* Header */}
               <div className="flex justify-between items-center mb-16 md:mb-24">
                 <img
-                  src="/assets/oss-cdn-sdjz-wiki/luminol_icon.svg"
+                  src="/assets/logo/luminol_icon.svg"
                   alt="Luminol Logo"
                   className="w-12 h-12 md:w-16 md:h-16"
                 />
