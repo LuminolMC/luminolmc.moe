@@ -20,5 +20,3 @@ Thumbs.db
 
 *.tsbuildinfo
 
-.env*
-!.env.example
