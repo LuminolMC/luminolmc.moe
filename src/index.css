@@ -2116,6 +2116,8 @@ p {
         border-right: none;
         border-bottom: none;
         gap: 16px;
+        min-height: 56px;
+        box-sizing: border-box;
         overflow: visible;
     }
 
@@ -2124,15 +2126,25 @@ p {
     }
 
     .sidebar {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0;
     }
 
     .sidebar-logo {
+        display: flex;
+        align-items: center;
         margin-bottom: 0;
         margin-left: 0;
         margin-right: 0;
         width: auto;
+    }
+
+    .hamburger {
+        align-self: stretch;
+        padding-top: 0;
+        padding-bottom: 0;
+        align-items: center;
+        justify-content: center;
     }
 
     .toc {

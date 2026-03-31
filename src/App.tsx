@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import Lenis from "lenis";
 
 declare global {
@@ -38,8 +38,10 @@ hljs.registerLanguage("gradle", gradle);
 hljs.registerLanguage("bash", bash);
 
 import { motion, AnimatePresence } from "motion/react";
-import FloatingSakuraIsland from "./FloatingSakuraIsland";
 import { useI18n } from "./i18n";
+
+const loadFloatingSakuraIsland = () => import("./FloatingSakuraIsland");
+const FloatingSakuraIsland = lazy(loadFloatingSakuraIsland);
 
 const retuneVersion = "0.0.0";
 
@@ -66,6 +68,11 @@ const SECTION_PATHS: Record<SectionId, string> = {
 const PATH_TO_SECTION: Record<string, SectionId> = Object.fromEntries(
   Object.entries(SECTION_PATHS).map(([sectionId, path]) => [path, sectionId]),
 ) as Record<string, SectionId>;
+const MOBILE_MEDIA_QUERY = "(max-width: 640px)";
+const FLOATING_ISLAND_BACKGROUND = {
+  background:
+    "linear-gradient(to bottom, var(--color-bg-page) 0%, #f8fafc 30%, #e0f2fe 70%, #bae6fd 100%)",
+} as const;
 
 function normalizePathname(pathname: string): string {
   if (!pathname) return "/";
@@ -133,9 +140,27 @@ export default function App() {
   const [copied, setCopied] = useState<string | null>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [playerCount, setPlayerCount] = useState<number | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+  });
+  const [shouldWarmFloatingIsland, setShouldWarmFloatingIsland] = useState(
+    () => {
+      if (typeof window === "undefined") return true;
+      return !window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+    },
+  );
+  const [shouldRenderFloatingIsland, setShouldRenderFloatingIsland] = useState(
+    () => {
+      if (typeof window === "undefined") return true;
+      return !window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+    },
+  );
   const activeSectionRef = useRef<SectionId>("hero");
   const routeReadyRef = useRef(false);
   const modalPathActiveRef = useRef(false);
+  const shouldSyncScrollUrlRef = useRef(!isMobileViewport);
+  const footerRef = useRef<HTMLElement>(null);
 
   type StableTags = {
     luminol: string;
@@ -153,6 +178,81 @@ export default function App() {
 
   const [stableTags, setStableTags] =
     useState<StableTags>(FALLBACK_STABLE_TAGS);
+
+  useEffect(() => {
+    shouldSyncScrollUrlRef.current = !isMobileViewport;
+  }, [isMobileViewport]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+    const syncViewport = () => {
+      const nextIsMobile = mediaQuery.matches;
+      setIsMobileViewport(nextIsMobile);
+      if (!nextIsMobile) {
+        setShouldWarmFloatingIsland(true);
+        setShouldRenderFloatingIsland(true);
+      }
+    };
+
+    syncViewport();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncViewport);
+      return () => mediaQuery.removeEventListener("change", syncViewport);
+    }
+
+    mediaQuery.addListener(syncViewport);
+    return () => mediaQuery.removeListener(syncViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport || shouldWarmFloatingIsland) return;
+
+    const footer = footerRef.current;
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+
+        setShouldWarmFloatingIsland(true);
+        void loadFloatingSakuraIsland();
+        observer.disconnect();
+      },
+      { rootMargin: "1400px 0px" },
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [isMobileViewport, shouldWarmFloatingIsland]);
+
+  useEffect(() => {
+    if (!shouldWarmFloatingIsland) return;
+
+    void loadFloatingSakuraIsland();
+  }, [shouldWarmFloatingIsland]);
+
+  useEffect(() => {
+    if (!isMobileViewport || shouldRenderFloatingIsland) return;
+
+    const footer = footerRef.current;
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+
+        setShouldRenderFloatingIsland(true);
+        observer.disconnect();
+      },
+      { rootMargin: "900px 0px" },
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [isMobileViewport, shouldRenderFloatingIsland]);
 
   function replaceUrl(pathname: string) {
     const nextPath = normalizePathname(pathname);
@@ -647,6 +747,7 @@ export default function App() {
           if (!(id in SECTION_PATHS)) continue;
 
           activeSectionRef.current = id;
+          if (!shouldSyncScrollUrlRef.current) continue;
           replaceUrl(SECTION_PATHS[id]);
         }
       },
@@ -950,9 +1051,16 @@ fix-folia-bugs: true`;
         </main>
       </div>
 
-      <footer className="footer-v2 full-width-footer relative">
-        <div className="light-only absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <FloatingSakuraIsland />
+      <footer ref={footerRef} className="footer-v2 full-width-footer relative">
+        <div
+          className="light-only absolute inset-0 z-0 pointer-events-none overflow-hidden"
+          style={FLOATING_ISLAND_BACKGROUND}
+        >
+          {shouldRenderFloatingIsland ? (
+            <Suspense fallback={null}>
+              <FloatingSakuraIsland />
+            </Suspense>
+          ) : null}
         </div>
 
         <div className="huge-footer-logo relative z-10">
