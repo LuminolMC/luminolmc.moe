@@ -159,7 +159,7 @@ export default function App() {
   const activeSectionRef = useRef<SectionId>("hero");
   const routeReadyRef = useRef(false);
   const modalPathActiveRef = useRef(false);
-  const shouldSyncUrlRef = useRef(!isMobileViewport);
+  const shouldSyncScrollUrlRef = useRef(!isMobileViewport);
   const footerRef = useRef<HTMLElement>(null);
 
   type StableTags = {
@@ -180,7 +180,7 @@ export default function App() {
     useState<StableTags>(FALLBACK_STABLE_TAGS);
 
   useEffect(() => {
-    shouldSyncUrlRef.current = !isMobileViewport;
+    shouldSyncScrollUrlRef.current = !isMobileViewport;
   }, [isMobileViewport]);
 
   useEffect(() => {
@@ -257,7 +257,6 @@ export default function App() {
   function replaceUrl(pathname: string) {
     const nextPath = normalizePathname(pathname);
     if (typeof window === "undefined") return;
-    if (!shouldSyncUrlRef.current) return;
     if (normalizePathname(window.location.pathname) === nextPath) return;
     window.history.replaceState(window.history.state, "", nextPath);
   }
@@ -748,6 +747,7 @@ export default function App() {
           if (!(id in SECTION_PATHS)) continue;
 
           activeSectionRef.current = id;
+          if (!shouldSyncScrollUrlRef.current) continue;
           replaceUrl(SECTION_PATHS[id]);
         }
       },
