@@ -379,8 +379,8 @@ export default function App() {
       id: "lophine",
       name: "Lophine",
       tag: t("projects.lophine.tag"),
-      icon: "/assets/logo/zophine_icon_logo_hd.png",
-      wordmark: "/assets/logo/zophine_wordmark_hd.png",
+      icon: "/assets/logo/lophine_icon_logo_hd.png",
+      wordmark: "/assets/logo/lophine_wordmark_hd.png",
       desc: t("projects.lophine.desc"),
       link: "https://github.com/LuminolMC/Lophine",
     },
@@ -898,7 +898,7 @@ fix-folia-bugs: true`;
                   <h3>{t("features.config.title")}</h3>
                   <p>
                     {t("features.config.descBeforeFile")}
-                    <code>luminol.yml</code>
+                    <code>luminol_global_config.toml</code>
                     {t("features.config.descAfterFile")}
                   </p>
                 </div>
@@ -1319,12 +1319,12 @@ fix-folia-bugs: true`;
                       </h4>
                       <p className="text-base text-[var(--color-text-secondary)] mb-6 leading-relaxed font-light">
                         {t("quickStart.step2DescBeforeFile")}
-                        <code>luminol.yml</code>
+                        <code>luminol_global_config.toml</code>
                         {t("quickStart.step2DescAfterFile")}
                       </p>
                       <div className="code-block-container !m-0">
                         <div className="code-block-header">
-                          <span>luminol.yml</span>
+                          <span>luminol_global_config.toml</span>
                           <button
                             onClick={() =>
                               copyToClipboard(luminolYamlCode, "luminol")

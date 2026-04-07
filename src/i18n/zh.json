@@ -132,7 +132,7 @@
     "step1NoteAfter": " 改为 ",
     "step1NoteEnd": "。",
     "step2Title": "2. 配置优化",
-    "step2DescBeforeFile": "编辑根目录下的 ",
+    "step2DescBeforeFile": "编辑服务器目录下的luminol_config文件夹中的 ",
     "step2DescAfterFile": "。建议开启以下配置以获得最佳性能：",
     "step3Title": "3. 迁移建议",
     "step3Desc": "如果你是从 Paper 迁移，请注意 Folia 架构下部分不兼容多线程的插件可能无法运行。建议先在测试环境确认插件兼容性。",

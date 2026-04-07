@@ -65,7 +65,7 @@
     },
     "config": {
       "title": "Highly configurable gameplay logic",
-      "desc": "Via luminol.yml, you can fine-tune everything from mob spawning and redstone tick behavior to specific vanilla feature toggles. Designed to satisfy both casual survival servers and high-end technical servers.",
+      "desc": "Via luminol_global_config.toml, you can fine-tune everything from mob spawning and redstone tick behavior to specific vanilla feature toggles. Designed to satisfy both casual survival servers and high-end technical servers.",
       "descBeforeFile": "Via ",
       "descAfterFile": ", you can fine-tune everything from mob spawning and redstone tick behavior to specific vanilla feature toggles. Designed to satisfy both casual survival servers and high-end technical servers."
     }
@@ -139,7 +139,7 @@
     },
     "step2": {
       "title": "2. Performance tuning",
-      "desc": "Edit luminol.yml in your server root. Enable the following settings for best performance:"
+      "desc": "Edit luminol_global_config.toml in the luminol_config folder under the server directory. Enable the following settings for best performance:"
     },
     "step3": {
       "title": "3. Migration notes",
